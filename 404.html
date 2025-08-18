@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found - SubLearning</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-blue: #2563EB;
+            --warning-orange: #F59E0B;
+            --error-red: #EF4444;
+            --neutral-gray: #64748B;
+            --light-gray: #F1F5F9;
+            --dark-gray: #1E293B;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FFFFFF;
+            color: var(--dark-gray);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-blue) !important;
+        }
+        
+        .error-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+        
+        .error-content {
+            max-width: 800px;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-code {
+            font-size: 8rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            color: var(--warning-orange);
+            margin-bottom: 1.5rem;
+        }
+        
+        .error-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 1rem;
+        }
+        
+        .error-message {
+            font-size: 1.25rem;
+            color: var(--neutral-gray);
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .error-subtitle {
+            font-size: 1.1rem;
+            color: var(--neutral-gray);
+            margin-bottom: 3rem;
+        }
+        
+        .search-container {
+            max-width: 500px;
+            margin: 0 auto 3rem auto;
+        }
+        
+        .search-input {
+            border: 2px solid #E2E8F0;
+            border-radius: 50px;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            font-size: 1rem;
+            width: 100%;
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+            outline: none;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--neutral-gray);
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-blue);
+            border-color: var(--primary-blue);
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-blue);
+            border-color: var(--primary-blue);
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-blue);
+            border-color: var(--primary-blue);
+            transform: translateY(-1px);
+        }
+        
+        .helpful-links {
+            background-color: var(--light-gray);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .helpful-links h5 {
+            color: var(--dark-gray);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        
+        .helpful-links .row {
+            justify-content: center;
+        }
+        
+        .helpful-link {
+            color: var(--primary-blue);
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .helpful-link:hover {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary-blue);
+            text-decoration: none;
+            transform: translateX(4px);
+        }
+        
+        .report-link {
+            color: var(--neutral-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .report-link:hover {
+            color: var(--primary-blue);
+            text-decoration: underline;
+        }
+        
+        footer {
+            background-color: var(--dark-gray);
+            color: white;
+            padding: 1.5rem 0;
+            margin-top: auto;
+        }
+        
+        footer a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+        
+        footer a:hover {
+            color: var(--primary-blue);
+        }
+        
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 5rem;
+            }
+            
+            .error-title {
+                font-size: 2rem;
+            }
+            
+            .error-message {
+                font-size: 1.1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .helpful-links .col-md-4 {
+                margin-bottom: 0.5rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .error-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-film"></i> SubLearning
+            </a>
+            <div class="d-flex">
+                <a href="/dashboard.html" class="btn btn-outline-primary me-2">Dashboard</a>
+                <a href="/auth.html" class="btn btn-primary">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Error Content -->
+    <div class="error-container">
+        <div class="container">
+            <div class="error-content">
+                <!-- Error Icon and Code -->
+                <div class="error-icon">
+                    <i class="bi bi-film"></i>
+                </div>
+                <div class="error-code">404</div>
+                
+                <!-- Error Messages -->
+                <h1 class="error-title">Page Not Found</h1>
+                <p class="error-message">Oops! This page seems to have rolled away like a movie reel</p>
+                <p class="error-subtitle">The page you're looking for doesn't exist, but your learning journey continues!</p>
+                
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <div class="position-relative">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search for movies, lessons, or content...">
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="/" class="btn btn-primary btn-lg">
+                        <i class="bi bi-house"></i> Back to Home
+                    </a>
+                    <a href="/dashboard.html" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-speedometer2"></i> Go to Dashboard
+                    </a>
+                    <a href="/" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-collection-play"></i> Browse Movies
+                    </a>
+                    <a href="/auth.html" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-person"></i> Login
+                    </a>
+                </div>
+                
+                <!-- Helpful Links -->
+                <div class="helpful-links">
+                    <h5>Popular Destinations</h5>
+                    <div class="row">
+                        <div class="col-md-4 col-sm-6 mb-2">
+                            <a href="/?lang=spanish" class="helpful-link">
+                                <i class="bi bi-translate"></i>
+                                Spanish Movies
+                            </a>
+                        </div>
+                        <div class="col-md-4 col-sm-6 mb-2">
+                            <a href="/?lang=french" class="helpful-link">
+                                <i class="bi bi-translate"></i>
+                                French Movies
+                            </a>
+                        </div>
+                        <div class="col-md-4 col-sm-6 mb-2">
+                            <a href="/?lang=italian" class="helpful-link">
+                                <i class="bi bi-translate"></i>
+                                Italian Movies
+                            </a>
+                        </div>
+                        <div class="col-md-4 col-sm-6 mb-2">
+                            <a href="/dashboard.html" class="helpful-link">
+                                <i class="bi bi-clock-history"></i>
+                                Recent Sessions
+                            </a>
+                        </div>
+                        <div class="col-md-4 col-sm-6 mb-2">
+                            <a href="/" class="helpful-link">
+                                <i class="bi bi-star"></i>
+                                Popular Movies
+                            </a>
+                        </div>
+                        <div class="col-md-4 col-sm-6 mb-2">
+                            <a href="/" class="helpful-link">
+                                <i class="bi bi-globe"></i>
+                                All Languages
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Report Problem -->
+                <p>
+                    <a href="#" class="report-link" onclick="reportProblem()">
+                        <i class="bi bi-exclamation-triangle"></i> Report a Problem
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <a href="/about">About</a>
+                    <a href="/help">Help</a>
+                    <a href="/contact">Contact Support</a>
+                    <a href="/privacy">Privacy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = e.target.value.trim();
+                if (query) {
+                    // In a real app, this would redirect to search results
+                    window.location.href = `/?search=${encodeURIComponent(query)}`;
+                }
+            }
+        });
+        
+        // Report problem functionality
+        function reportProblem() {
+            const currentUrl = window.location.href;
+            const subject = encodeURIComponent('404 Error Report');
+            const body = encodeURIComponent(`I encountered a 404 error on the following page:\n\nURL: ${currentUrl}\n\nAdditional details: `);
+            
+            // In a real app, this might open a support form or send to a support system
+            alert('Thank you for reporting this issue. Our team will investigate the broken link.');
+            
+            // Alternative: Open email client
+            // window.location.href = `mailto:support@sublearning.com?subject=${subject}&body=${body}`;
+        }
+        
+        // Add some interactive enhancements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate the error code on load
+            const errorCode = document.querySelector('.error-code');
+            if (errorCode) {
+                errorCode.style.opacity = '0';
+                errorCode.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    errorCode.style.transition = 'all 0.6s ease';
+                    errorCode.style.opacity = '1';
+                    errorCode.style.transform = 'scale(1)';
+                }, 200);
+            }
+            
+            // Add keyboard shortcut for search
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && e.target.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+            });
+            
+            // Add click analytics for helpful links (in real app)
+            document.querySelectorAll('.helpful-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    // In a real app, this would track which links are most helpful
+                    console.log('Helpful link clicked:', this.textContent.trim());
+                });
+            });
+        });
+        
+        // Auto-suggest popular searches as user types
+        const popularSearches = [
+            'Amélie', 'Cinema Paradiso', 'Roma', 'Parasite', 'Spanish movies',
+            'French films', 'Italian cinema', 'language learning', 'subtitles',
+            'beginner movies', 'advanced level', 'recent releases'
+        ];
+        
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            if (query.length > 2) {
+                const suggestions = popularSearches.filter(search => 
+                    search.toLowerCase().includes(query)
+                ).slice(0, 3);
+                
+                // In a real app, this would show a dropdown with suggestions
+                if (suggestions.length > 0) {
+                    console.log('Search suggestions:', suggestions);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SubLearning</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563EB;
+            --success-color: #10B981;
+            --accent-color: #7C3AED;
+            --light-bg: #F8FAFC;
+            --border-color: #E2E8F0;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .nav-link {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+        }
+
+        .main-container {
+            padding: 2rem 0;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .streak-badge {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .continue-card {
+            background: linear-gradient(135deg, #fff, #f8faff);
+            border: 2px solid var(--primary-color);
+        }
+
+        .continue-card .card-body {
+            padding: 2rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            background-color: var(--border-color);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--success-color);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .movie-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            height: 200px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+        }
+
+        .activity-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-date {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .sidebar {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: fit-content;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-link:hover {
+            background-color: var(--light-bg);
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .btn-outline-primary {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .badge {
+            font-weight: 600;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .bg-success {
+            background-color: var(--success-color) !important;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .motivational-text {
+            color: var(--success-color);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .welcome-title {
+                font-size: 1.5rem;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+            
+            .movie-card {
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-film"></i> SubLearning
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Browse Movies</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Alex Johnson
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-question-circle"></i> Help</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container main-container">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h1 class="welcome-title">Welcome back, Alex!</h1>
+                    <p class="mb-0">Ready to continue your cinematic journey?</p>
+                </div>
+                <div class="streak-badge">
+                    <i class="bi bi-fire"></i>
+                    <span>7 day streak</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Content Area -->
+            <div class="col-12 col-lg-8">
+                <!-- Continue Learning Card -->
+                <div class="card continue-card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h3 class="card-title mb-0">Continue Learning</h3>
+                            <span class="motivational-text">Keep it up!</span>
+                        </div>
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="mb-2">Cinema Paradiso</h5>
+                                <p class="text-muted mb-3">A nostalgic journey through the golden age of cinema in a small Italian village.</p>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="small">Progress</span>
+                                        <span class="small">73%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 73%"></div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary btn-lg" onclick="continueWatching()">
+                                    <i class="bi bi-play-fill"></i> Continue Watching
+                                </button>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="movie-card">
+                                    <i class="bi bi-film" style="font-size: 3rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Section -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="stat-number">3</div>
+                                <div class="stat-label">Movies Completed</div>
+                                <span class="badge bg-success mt-2">Great progress!</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="stat-number">12.5</div>
+                                <div class="stat-label">Hours Learned</div>
+                                <span class="badge bg-success mt-2">Amazing!</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <div class="stat-number">7</div>
+                                <div class="stat-label">Current Streak</div>
+                                <span class="badge bg-success mt-2">On fire!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="section-title">Recent Activity</h3>
+                        <div class="list-group list-group-flush">
+                            <div class="activity-item">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">Completed Amélie</h6>
+                                    <p class="mb-1 text-muted">Finished watching • 2 hours</p>
+                                </div>
+                                <div class="activity-date">2 days ago</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">Completed Roma</h6>
+                                    <p class="mb-1 text-muted">Finished watching • 2.2 hours</p>
+                                </div>
+                                <div class="activity-date">4 days ago</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">Completed Parasite</h6>
+                                    <p class="mb-1 text-muted">Finished watching • 2.1 hours</p>
+                                </div>
+                                <div class="activity-date">1 week ago</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">Started Cinema Paradiso</h6>
+                                    <p class="mb-1 text-muted">Currently watching • 73% complete</p>
+                                </div>
+                                <div class="activity-date">1 week ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Browse New Movies -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="section-title mb-0">Recommended for You</h3>
+                            <a href="index.html" class="btn btn-outline-primary">Browse All</a>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="movie-card">
+                                    <div class="text-center">
+                                        <i class="bi bi-film" style="font-size: 2rem;"></i>
+                                        <div class="mt-2 small">The Lives of Others</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="movie-card">
+                                    <div class="text-center">
+                                        <i class="bi bi-film" style="font-size: 2rem;"></i>
+                                        <div class="mt-2 small">Talk to Her</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="movie-card">
+                                    <div class="text-center">
+                                        <i class="bi bi-film" style="font-size: 2rem;"></i>
+                                        <div class="mt-2 small">Bicycle Thieves</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="movie-card">
+                                    <div class="text-center">
+                                        <i class="bi bi-film" style="font-size: 2rem;"></i>
+                                        <div class="mt-2 small">Y Tu Mamá También</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-12 col-lg-4">
+                <div class="sidebar">
+                    <h5 class="mb-3">Quick Access</h5>
+                    <a href="#" class="sidebar-link">
+                        <i class="bi bi-person"></i>
+                        <span>My Profile</span>
+                    </a>
+                    <a href="#" class="sidebar-link">
+                        <i class="bi bi-gear"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="#" class="sidebar-link">
+                        <i class="bi bi-bookmark"></i>
+                        <span>Watchlist</span>
+                    </a>
+                    <a href="#" class="sidebar-link">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Watch History</span>
+                    </a>
+                    <a href="#" class="sidebar-link">
+                        <i class="bi bi-question-circle"></i>
+                        <span>Help & Support</span>
+                    </a>
+                    <hr class="my-3">
+                    <div class="text-center">
+                        <p class="small text-muted mb-2">Learning Progress This Week</p>
+                        <div class="d-flex justify-content-between mb-2">
+                            <div class="text-center">
+                                <div style="height: 30px; width: 8px; background-color: var(--success-color); border-radius: 4px; margin: 0 auto;"></div>
+                                <small class="text-muted">Mon</small>
+                            </div>
+                            <div class="text-center">
+                                <div style="height: 45px; width: 8px; background-color: var(--success-color); border-radius: 4px; margin: 0 auto;"></div>
+                                <small class="text-muted">Tue</small>
+                            </div>
+                            <div class="text-center">
+                                <div style="height: 20px; width: 8px; background-color: var(--border-color); border-radius: 4px; margin: 0 auto;"></div>
+                                <small class="text-muted">Wed</small>
+                            </div>
+                            <div class="text-center">
+                                <div style="height: 60px; width: 8px; background-color: var(--success-color); border-radius: 4px; margin: 0 auto;"></div>
+                                <small class="text-muted">Thu</small>
+                            </div>
+                            <div class="text-center">
+                                <div style="height: 40px; width: 8px; background-color: var(--success-color); border-radius: 4px; margin: 0 auto;"></div>
+                                <small class="text-muted">Fri</small>
+                            </div>
+                            <div class="text-center">
+                                <div style="height: 35px; width: 8px; background-color: var(--success-color); border-radius: 4px; margin: 0 auto;"></div>
+                                <small class="text-muted">Sat</small>
+                            </div>
+                            <div class="text-center">
+                                <div style="height: 50px; width: 8px; background-color: var(--success-color); border-radius: 4px; margin: 0 auto;"></div>
+                                <small class="text-muted">Sun</small>
+                            </div>
+                        </div>
+                        <p class="small motivational-text">Consistent learning streak!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Continue watching functionality
+        function continueWatching() {
+            alert('Redirecting to Cinema Paradiso at 73% progress...');
+            // In a real app, this would navigate to the video player
+        }
+
+        // Logout functionality
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logging out...');
+                // In a real app, this would clear session and redirect to login
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Add some interactive micro-animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate progress bar on load
+            const progressBar = document.querySelector('.progress-fill');
+            if (progressBar) {
+                progressBar.style.width = '0%';
+                setTimeout(() => {
+                    progressBar.style.width = '73%';
+                }, 500);
+            }
+
+            // Add click interactions to movie cards
+            const movieCards = document.querySelectorAll('.movie-card');
+            movieCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const movieTitle = this.querySelector('.small')?.textContent || 'this movie';
+                    alert(`Opening ${movieTitle}...`);
+                });
+                
+                // Add cursor pointer
+                card.style.cursor = 'pointer';
+            });
+
+            // Add click interactions to activity items
+            const activityItems = document.querySelectorAll('.activity-item');
+            activityItems.forEach(item => {
+                item.style.cursor = 'pointer';
+                item.addEventListener('click', function() {
+                    const movieTitle = this.querySelector('h6').textContent;
+                    alert(`Viewing details for: ${movieTitle}`);
+                });
+            });
+
+            // Add hover effects to sidebar links
+            const sidebarLinks = document.querySelectorAll('.sidebar-link');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const linkText = this.querySelector('span').textContent;
+                    alert(`Opening ${linkText}...`);
+                });
+            });
+        });
+
+        // Add some motivational interactions
+        function showMotivation() {
+            const messages = [
+                "You're doing great! Keep learning!",
+                "Your consistency is paying off!",
+                "Amazing progress this week!",
+                "Cinema knowledge is expanding!"
+            ];
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            
+            // Create a temporary notification
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-success position-fixed';
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; opacity: 0; transition: opacity 0.3s ease;';
+            notification.innerHTML = `<i class="bi bi-check-circle"></i> ${randomMessage}`;
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => notification.style.opacity = '1', 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Trigger motivation on certain interactions
+        document.querySelector('.continue-card')?.addEventListener('mouseenter', function() {
+            if (Math.random() < 0.3) { // 30% chance
+                setTimeout(showMotivation, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
