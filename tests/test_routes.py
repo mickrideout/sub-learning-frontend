@@ -1,5 +1,4 @@
 """Test main routes."""
-import json
 
 
 def test_health_endpoint(client):

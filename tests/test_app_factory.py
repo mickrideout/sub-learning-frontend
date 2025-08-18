@@ -1,5 +1,4 @@
 """Test Flask app factory."""
-import pytest
 from app import create_app
 
 

@@ -1,6 +1,6 @@
 """Test cases for database utility functions."""
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from app import db
 from app.models.user import User

@@ -1,6 +1,5 @@
 """Integration tests for database initialization script."""
 from scripts.init_db import apply_sqlite_optimizations, create_sample_users, main
-import pytest
 import tempfile
 import sqlite3
 from pathlib import Path
