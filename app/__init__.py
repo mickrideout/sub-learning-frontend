@@ -66,7 +66,7 @@ def create_app(test_config=None):
     login_manager.login_message_category = 'info'
 
     # Import models for migration detection
-    from app.models import User  # noqa: F401
+    from app.models import User, Language  # noqa: F401
 
     # User loader callback for Flask-Login
     @login_manager.user_loader
@@ -80,8 +80,10 @@ def create_app(test_config=None):
     # Register blueprints
     from app.blueprints.main import main_bp
     from app.blueprints.auth import auth_bp
+    from app.blueprints.api import api_bp
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(api_bp)
 
     # Register error handlers
     from app.utils.error_handlers import register_error_handlers

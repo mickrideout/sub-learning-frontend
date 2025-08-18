@@ -9,6 +9,18 @@ from app.services.auth_service import AuthService, AuthenticationError
 from app.services.oauth_service import OAuthService
 
 
+def user_needs_language_selection(user):
+    """Check if user needs to complete language selection."""
+    return not user.native_language_id or not user.target_language_id
+
+
+def get_redirect_after_auth(user):
+    """Get the appropriate redirect URL after authentication based on user profile completion."""
+    if user_needs_language_selection(user):
+        return url_for('auth.language_selection')
+    return url_for('auth.dashboard')
+
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """User registration route with form handling and validation."""
@@ -48,11 +60,11 @@ def login():
             )
             login_user(user, remember=form.remember_me.data)
 
-            # Redirect to next page if provided, otherwise to main index
+            # Redirect to next page if provided, otherwise check if language selection is needed
             next_page = request.args.get('next')
             if next_page:
                 return redirect(next_page)
-            return redirect(url_for('main.index'))
+            return redirect(get_redirect_after_auth(user))
 
         except AuthenticationError as e:
             flash(str(e), 'error')
@@ -139,6 +151,17 @@ def profile():
 def dashboard():
     """Basic dashboard route for authenticated users."""
     return render_template('auth/dashboard.html', user=current_user)
+
+
+@auth_bp.route('/language-selection')
+@login_required
+def language_selection():
+    """Language selection route for authenticated users to set native and target languages."""
+    # If user has already completed language selection, redirect to dashboard
+    if not user_needs_language_selection(current_user):
+        return redirect(url_for('auth.dashboard'))
+    
+    return render_template('auth/language-selection.html', user=current_user)
 
 
 # API endpoints for AJAX requests
@@ -302,11 +325,11 @@ def oauth_callback(provider):
         if OAuthService.login_oauth_user(user):
             flash(f'Welcome! You have been logged in via {provider.title()}.', 'success')
             
-            # Redirect to next page if provided, otherwise to dashboard
+            # Redirect to next page if provided, otherwise check if language selection is needed
             next_page = request.args.get('next')
             if next_page:
                 return redirect(next_page)
-            return redirect(url_for('auth.dashboard'))
+            return redirect(get_redirect_after_auth(user))
         else:
             flash('Login failed after OAuth authentication. Please try again.', 'error')
             return redirect(url_for('auth.login'))

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Select Languages - Sub Learning{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Select Your Languages</h3>
+                <p class="mb-0 text-muted">Choose your native language and the language you want to learn</p>
+            </div>
+            <div class="card-body">
+                <!-- Language Selection Form -->
+                <form id="language-selection-form">
+                    <div class="row">
+                        <!-- Native Language Selection -->
+                        <div class="col-md-6">
+                            <div class="card h-100 language-panel" data-language-type="native">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-home me-2"></i>Native Language
+                                    </h5>
+                                    <small>Your mother tongue</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="native-language" class="form-label">Select Native Language</label>
+                                        <select class="form-select" id="native-language" name="native_language_id" required>
+                                            <option value="">Choose your native language...</option>
+                                            <!-- Languages will be populated via JavaScript -->
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Please select your native language.
+                                        </div>
+                                    </div>
+                                    <div class="selected-language-display d-none">
+                                        <div class="alert alert-primary">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            <strong>Selected:</strong> <span id="native-language-name"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Target Language Selection -->
+                        <div class="col-md-6">
+                            <div class="card h-100 language-panel" data-language-type="target">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-graduation-cap me-2"></i>Target Language
+                                    </h5>
+                                    <small>Language you want to learn</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="target-language" class="form-label">Select Target Language</label>
+                                        <select class="form-select" id="target-language" name="target_language_id" required>
+                                            <option value="">Choose language to learn...</option>
+                                            <!-- Languages will be populated via JavaScript -->
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Please select the language you want to learn.
+                                        </div>
+                                    </div>
+                                    <div class="selected-language-display d-none">
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            <strong>Selected:</strong> <span id="target-language-name"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Validation Error Display -->
+                    <div id="same-language-error" class="alert alert-warning d-none mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Your native language and target language cannot be the same. Please select different languages.
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="mt-4 d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('auth.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="save-languages-btn" disabled>
+                            <i class="fas fa-save me-2"></i>Save Language Preferences
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="text-center mt-4 d-none">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Saving...</span>
+            </div>
+            <p class="mt-2">Saving your language preferences...</p>
+        </div>
+
+        <!-- Success State -->
+        <div id="success-state" class="alert alert-success d-none mt-4">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>Success!</strong> Your language preferences have been saved. Redirecting to dashboard...
+        </div>
+    </div>
+</div>
+
+<style>
+.language-panel {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.language-panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+#save-languages-btn:disabled {
+    cursor: not-allowed;
+}
+
+.selected-language-display {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script src="{{ url_for('static', filename='js/components/language-selector.js') }}"></script>
+{% endblock %}

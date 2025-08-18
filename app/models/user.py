@@ -22,8 +22,8 @@ class User(UserMixin, db.Model):
     oauth_id = db.Column(db.String(255), nullable=True)
 
     # Language preferences (foreign keys as per schema)
-    native_language_id = db.Column(db.SmallInteger, nullable=True)
-    target_language_id = db.Column(db.SmallInteger, nullable=True)
+    native_language_id = db.Column(db.SmallInteger, db.ForeignKey('languages.id'), nullable=True)
+    target_language_id = db.Column(db.SmallInteger, db.ForeignKey('languages.id'), nullable=True)
 
     # Account status
     is_active = db.Column(db.Boolean, default=True, nullable=False)

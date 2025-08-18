@@ -6,7 +6,7 @@ This script:
 2. Applies SQLite optimizations
 3. Optionally inserts sample data for testing
 """
-from app.models import User
+from app.models import User, Language
 from app import create_app, db
 import os
 import sys
@@ -78,6 +78,56 @@ def apply_sqlite_optimizations(db_path):
         return {"status": "error", "error": error_msg}
     finally:
         conn.close()
+
+
+def create_sample_languages():
+    """Create sample languages for testing."""
+    print("Creating sample languages...")
+
+    try:
+        # Common languages for language learning
+        sample_languages = [
+            {'name': 'english', 'display_name': 'English', 'code': 'en'},
+            {'name': 'spanish', 'display_name': 'Spanish', 'code': 'es'},
+            {'name': 'french', 'display_name': 'French', 'code': 'fr'},
+            {'name': 'german', 'display_name': 'German', 'code': 'de'},
+            {'name': 'italian', 'display_name': 'Italian', 'code': 'it'},
+            {'name': 'portuguese', 'display_name': 'Portuguese', 'code': 'pt'},
+            {'name': 'russian', 'display_name': 'Russian', 'code': 'ru'},
+            {'name': 'chinese', 'display_name': 'Chinese (Mandarin)', 'code': 'zh'},
+            {'name': 'japanese', 'display_name': 'Japanese', 'code': 'ja'},
+            {'name': 'korean', 'display_name': 'Korean', 'code': 'ko'},
+            {'name': 'arabic', 'display_name': 'Arabic', 'code': 'ar'},
+            {'name': 'hindi', 'display_name': 'Hindi', 'code': 'hi'},
+            {'name': 'dutch', 'display_name': 'Dutch', 'code': 'nl'},
+            {'name': 'swedish', 'display_name': 'Swedish', 'code': 'sv'},
+            {'name': 'norwegian', 'display_name': 'Norwegian', 'code': 'no'},
+        ]
+        
+        languages = []
+        for lang_data in sample_languages:
+            # Check if language already exists
+            existing = Language.query.filter_by(code=lang_data['code']).first()
+            if not existing:
+                language = Language(
+                    name=lang_data['name'],
+                    display_name=lang_data['display_name'],
+                    code=lang_data['code']
+                )
+                languages.append(language)
+        
+        if languages:
+            db.session.add_all(languages)
+            db.session.commit()
+            print(f"Created {len(languages)} sample languages:")
+            for lang in languages:
+                print(f"  - {lang.display_name} ({lang.code})")
+        else:
+            print("Languages already exist, skipping creation")
+
+    except Exception as e:
+        print(f"Error creating sample languages: {e}")
+        db.session.rollback()
 
 
 def create_sample_users():
@@ -152,6 +202,7 @@ def main():
 
         # Create sample data if requested
         if create_samples:
+            create_sample_languages()
             create_sample_users()
 
         print("\nDatabase initialization complete!")

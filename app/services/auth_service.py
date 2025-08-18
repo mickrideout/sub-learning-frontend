@@ -3,7 +3,7 @@ import secrets
 from datetime import datetime, timezone
 from flask import current_app
 from app import db
-from app.models import User
+from app.models import User, Language
 
 
 class AuthenticationError(Exception):
@@ -207,3 +207,60 @@ class AuthService:
                 f'User deactivation failed for {user_id}: {str(e)}'
             )
             raise AuthenticationError(f'User deactivation failed: {str(e)}')
+
+    @staticmethod
+    def update_user_languages(user_id, native_language_id, target_language_id):
+        """
+        Update user's native and target language preferences.
+
+        Args:
+            user_id (int): User ID to update
+            native_language_id (int): Native language ID
+            target_language_id (int): Target language ID
+
+        Returns:
+            User: The updated user object
+
+        Raises:
+            AuthenticationError: If user not found, languages invalid, or update fails
+        """
+        # Validate that languages are different
+        if native_language_id == target_language_id:
+            raise AuthenticationError('Native and target languages must be different')
+
+        # Find the user
+        user = db.session.get(User, user_id)
+        if not user:
+            raise AuthenticationError('User not found')
+
+        # Validate that both languages exist
+        native_language = Language.query.get(native_language_id)
+        if not native_language:
+            raise AuthenticationError('Invalid native language')
+
+        target_language = Language.query.get(target_language_id)
+        if not target_language:
+            raise AuthenticationError('Invalid target language')
+
+        try:
+            # Update user language preferences
+            user.native_language_id = native_language_id
+            user.target_language_id = target_language_id
+            user.updated_at = datetime.now(timezone.utc)
+
+            db.session.commit()
+
+            current_app.logger.info(
+                f'Language preferences updated for user {user.email}: '
+                f'native={native_language.display_name}, '
+                f'target={target_language.display_name}'
+            )
+
+            return user
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(
+                f'Language update failed for user {user_id}: {str(e)}'
+            )
+            raise AuthenticationError(f'Language update failed: {str(e)}')
