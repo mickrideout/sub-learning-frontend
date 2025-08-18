@@ -1,6 +1,6 @@
 """Authentication service layer with business logic."""
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import current_app
 from app import db
 from app.models import User
@@ -46,8 +46,8 @@ class AuthService:
                 native_language_id=native_language_id,
                 target_language_id=target_language_id,
                 is_active=True,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc)
             )
             user.set_password(password)
 
@@ -129,7 +129,7 @@ class AuthService:
             bool: True if token is valid (basic validation)
         """
         # Basic token format validation
-        if not token or len(token) < 32:
+        if not token or not isinstance(token, str) or len(token) < 32:
             return False
 
         # In a full implementation, we would:
@@ -162,7 +162,7 @@ class AuthService:
 
         try:
             user.set_password(new_password)
-            user.updated_at = datetime.utcnow()
+            user.updated_at = datetime.now(timezone.utc)
             db.session.commit()
 
             current_app.logger.info(f'Password reset successful for user: {email}')
@@ -189,13 +189,13 @@ class AuthService:
         Raises:
             AuthenticationError: If user not found or deactivation fails
         """
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             raise AuthenticationError('User not found')
 
         try:
             user.is_active = False
-            user.updated_at = datetime.utcnow()
+            user.updated_at = datetime.now(timezone.utc)
             db.session.commit()
 
             current_app.logger.info(f'User deactivated: {user.email}')
