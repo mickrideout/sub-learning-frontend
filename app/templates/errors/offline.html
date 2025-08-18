@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Network Error - Sub Learning{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <h1 class="display-4">Network Error</h1>
+        <p class="fs-5"><span class="text-warning">Offline!</span> No internet connection.</p>
+        <p class="lead">Please check your network connection and try again.</p>
+        <button onclick="window.location.reload()" class="btn btn-primary">Retry</button>
+    </div>
+</div>
+{% endblock %}
