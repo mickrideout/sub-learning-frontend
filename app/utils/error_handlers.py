@@ -34,7 +34,7 @@ def register_error_handlers(app):
                 "error": "Access forbidden",
                 "code": "forbidden"
             }), 403
-        return render_template('errors/500.html'), 403
+        return render_template('errors/404.html'), 403
     
     @app.errorhandler(HTTPException)
     def handle_http_exception(error):
