@@ -234,11 +234,11 @@ class AuthService:
             raise AuthenticationError('User not found')
 
         # Validate that both languages exist
-        native_language = Language.query.get(native_language_id)
+        native_language = db.session.get(Language, native_language_id)
         if not native_language:
             raise AuthenticationError('Invalid native language')
 
-        target_language = Language.query.get(target_language_id)
+        target_language = db.session.get(Language, target_language_id)
         if not target_language:
             raise AuthenticationError('Invalid target language')
 

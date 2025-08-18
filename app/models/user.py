@@ -24,6 +24,10 @@ class User(UserMixin, db.Model):
     # Language preferences (foreign keys as per schema)
     native_language_id = db.Column(db.SmallInteger, db.ForeignKey('languages.id'), nullable=True)
     target_language_id = db.Column(db.SmallInteger, db.ForeignKey('languages.id'), nullable=True)
+    
+    # Relationships for efficient queries
+    native_language = db.relationship('Language', foreign_keys=[native_language_id], lazy='select')
+    target_language = db.relationship('Language', foreign_keys=[target_language_id], lazy='select')
 
     # Account status
     is_active = db.Column(db.Boolean, default=True, nullable=False)
@@ -54,9 +58,9 @@ class User(UserMixin, db.Model):
         """Debug representation of User model."""
         return f'<User {self.id}: {self.email}>'
 
-    def to_dict(self):
+    def to_dict(self, include_languages=False):
         """Convert User model to dictionary for JSON serialization."""
-        return {
+        user_dict = {
             'id': self.id,
             'email': self.email,
             'oauth_provider': self.oauth_provider,
@@ -66,3 +70,9 @@ class User(UserMixin, db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+        
+        if include_languages:
+            user_dict['native_language'] = self.native_language.to_dict() if self.native_language else None
+            user_dict['target_language'] = self.target_language.to_dict() if self.target_language else None
+            
+        return user_dict

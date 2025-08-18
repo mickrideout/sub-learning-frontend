@@ -72,7 +72,7 @@ class TestLanguageEndpoints:
             
             # Login the user for the request context
             with client.session_transaction() as sess:
-                sess['user_id'] = str(user.id)
+                sess['_user_id'] = str(user.id)
                 sess['_fresh'] = True
         
         # Test the API endpoint
@@ -105,7 +105,7 @@ class TestLanguageEndpoints:
             
             # Login the user for the request context
             with client.session_transaction() as sess:
-                sess['user_id'] = str(user.id)
+                sess['_user_id'] = str(user.id)
                 sess['_fresh'] = True
         
         # Test the API endpoint with same language
@@ -134,7 +134,7 @@ class TestLanguageEndpoints:
             
             # Login the user for the request context
             with client.session_transaction() as sess:
-                sess['user_id'] = str(user.id)
+                sess['_user_id'] = str(user.id)
                 sess['_fresh'] = True
         
         # Test with missing target_language_id
@@ -162,7 +162,7 @@ class TestLanguageEndpoints:
             
             # Login the user for the request context
             with client.session_transaction() as sess:
-                sess['user_id'] = str(user.id)
+                sess['_user_id'] = str(user.id)
                 sess['_fresh'] = True
         
         # Test with invalid language IDs
@@ -203,7 +203,7 @@ class TestLanguageEndpoints:
             
             # Login the user for the request context
             with client.session_transaction() as sess:
-                sess['user_id'] = str(user.id)
+                sess['_user_id'] = str(user.id)
                 sess['_fresh'] = True
         
         # Test with no JSON data
@@ -216,4 +216,4 @@ class TestLanguageEndpoints:
         
         assert 'error' in data
         assert 'code' in data
-        assert data['code'] == 'MISSING_DATA'
+        assert data['code'] == 'INVALID_JSON'

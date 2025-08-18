@@ -50,7 +50,14 @@ def update_user_languages():
         JSON response with updated user language preferences
     """
     try:
-        data = request.get_json()
+        # Handle JSON parsing errors
+        try:
+            data = request.get_json()
+        except Exception:
+            return jsonify({
+                'error': 'Invalid JSON data in request body',
+                'code': 'INVALID_JSON'
+            }), 400
 
         if not data:
             return jsonify({
@@ -68,13 +75,6 @@ def update_user_languages():
                 'code': 'MISSING_FIELDS'
             }), 400
 
-        # Validate that languages are different
-        if native_language_id == target_language_id:
-            return jsonify({
-                'error': 'Native language and target language must be different',
-                'code': 'SAME_LANGUAGE_ERROR'
-            }), 400
-
         # Validate that language IDs are positive integers
         try:
             native_language_id = int(native_language_id)
@@ -89,37 +89,45 @@ def update_user_languages():
                 'code': 'INVALID_LANGUAGE_ID'
             }), 400
 
-        # Verify that both languages exist in the database
-        native_language = Language.query.get(native_language_id)
-        target_language = Language.query.get(target_language_id)
+        # Update user's language preferences using the service layer
+        # Service layer handles all validation including same-language check and existence validation
+        from app.services.auth_service import AuthService, AuthenticationError
+        
+        try:
+            updated_user = AuthService.update_user_languages(
+                user_id=current_user.id,
+                native_language_id=native_language_id,
+                target_language_id=target_language_id
+            )
 
-        if not native_language:
             return jsonify({
-                'error': 'Native language not found',
-                'code': 'INVALID_NATIVE_LANGUAGE'
-            }), 404
-
-        if not target_language:
-            return jsonify({
-                'error': 'Target language not found',
-                'code': 'INVALID_TARGET_LANGUAGE'
-            }), 404
-
-        # Update user's language preferences
-        current_user.native_language_id = native_language_id
-        current_user.target_language_id = target_language_id
-
-        db.session.commit()
-
-        return jsonify({
-            'message': 'Language preferences updated successfully',
-            'user': {
-                'id': current_user.id,
-                'email': current_user.email,
-                'native_language': native_language.to_dict(),
-                'target_language': target_language.to_dict()
-            }
-        }), 200
+                'message': 'Language preferences updated successfully',
+                'user': updated_user.to_dict(include_languages=True)
+            }), 200
+            
+        except AuthenticationError as e:
+            error_message = str(e)
+            # Map service errors to appropriate HTTP codes and error codes
+            if "must be different" in error_message:
+                return jsonify({
+                    'error': error_message,
+                    'code': 'SAME_LANGUAGE_ERROR'
+                }), 400
+            elif "Invalid native language" in error_message:
+                return jsonify({
+                    'error': error_message,
+                    'code': 'INVALID_NATIVE_LANGUAGE'
+                }), 404
+            elif "Invalid target language" in error_message:
+                return jsonify({
+                    'error': error_message,
+                    'code': 'INVALID_TARGET_LANGUAGE'
+                }), 404
+            else:
+                return jsonify({
+                    'error': error_message,
+                    'code': 'VALIDATION_ERROR'
+                }), 400
 
     except exc.SQLAlchemyError:
         db.session.rollback()

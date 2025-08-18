@@ -83,7 +83,7 @@ class TestLanguageSelectionIntegration:
             
             # Simulate user login (OAuth flow would typically handle this)
             with client.session_transaction() as sess:
-                sess['user_id'] = str(user.id)
+                sess['_user_id'] = str(user.id)
                 sess['_fresh'] = True
             
             # Access dashboard should redirect to language selection
