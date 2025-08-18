@@ -44,6 +44,20 @@
                                 </td>
                             </tr>
                             <tr>
+                                <td><strong>Email Status:</strong></td>
+                                <td>
+                                    {% if user.email_verified %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Verified
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Unverified
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
                                 <td><strong>Registration:</strong></td>
                                 <td>{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</td>
                             </tr>
@@ -61,9 +75,20 @@
                                 <td><strong>Login Method:</strong></td>
                                 <td>
                                     {% if user.oauth_provider %}
-                                        <span class="badge bg-info">{{ user.oauth_provider|title }} OAuth</span>
+                                        <span class="badge bg-info">
+                                            {% if user.oauth_provider == 'google' %}
+                                                <i class="fab fa-google me-1"></i>
+                                            {% elif user.oauth_provider == 'facebook' %}
+                                                <i class="fab fa-facebook-f me-1"></i>
+                                            {% elif user.oauth_provider == 'apple' %}
+                                                <i class="fab fa-apple me-1"></i>
+                                            {% endif %}
+                                            {{ user.oauth_provider|title }} OAuth
+                                        </span>
                                     {% else %}
-                                        <span class="badge bg-primary">Email/Password</span>
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-envelope me-1"></i>Email/Password
+                                        </span>
                                     {% endif %}
                                 </td>
                             </tr>

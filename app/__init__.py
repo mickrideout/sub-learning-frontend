@@ -4,6 +4,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from authlib.integrations.flask_client import OAuth
 
 from app.config import Config
 
@@ -11,6 +12,7 @@ from app.config import Config
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+oauth = OAuth()
 
 
 def create_app(test_config=None):
@@ -26,6 +28,37 @@ def create_app(test_config=None):
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    oauth.init_app(app)
+
+    # Configure OAuth clients
+    oauth.register(
+        name='google',
+        client_id=app.config['GOOGLE_CLIENT_ID'],
+        client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+        server_metadata_url='https://accounts.google.com/.well-known/openid_configuration',
+        client_kwargs={
+            'scope': 'openid email profile'
+        }
+    )
+
+    oauth.register(
+        name='facebook',
+        client_id=app.config['FACEBOOK_CLIENT_ID'],
+        client_secret=app.config['FACEBOOK_CLIENT_SECRET'],
+        access_token_url='https://graph.facebook.com/v18.0/oauth/access_token',
+        authorize_url='https://www.facebook.com/v18.0/dialog/oauth',
+        api_base_url='https://graph.facebook.com/v18.0/',
+        client_kwargs={'scope': 'email'},
+    )
+
+    oauth.register(
+        name='apple',
+        client_id=app.config['APPLE_CLIENT_ID'],
+        client_secret=app.config['APPLE_PRIVATE_KEY'],
+        access_token_url='https://appleid.apple.com/auth/token',
+        authorize_url='https://appleid.apple.com/auth/authorize',
+        client_kwargs={'scope': 'name email'},
+    )
 
     # Configure Flask-Login
     login_manager.login_view = 'auth.login'

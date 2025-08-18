@@ -9,6 +9,7 @@ Flask-Migrate==4.0.5
 
 # Authentication
 Flask-Login==0.6.3
+Authlib==1.2.1
 
 # Forms and validation
 WTForms==3.1.0

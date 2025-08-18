@@ -6,6 +6,7 @@ from app.blueprints.auth.forms import (
     RegistrationForm, LoginForm, PasswordResetRequestForm, PasswordResetForm
 )
 from app.services.auth_service import AuthService, AuthenticationError
+from app.services.oauth_service import OAuthService
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
@@ -222,3 +223,124 @@ def api_logout():
     return jsonify({
         'message': 'Logout successful'
     }), 200
+
+
+# OAuth routes
+
+@auth_bp.route('/oauth/<provider>')
+def oauth_login(provider):
+    """
+    Initiate OAuth login flow for the specified provider.
+    
+    Args:
+        provider: OAuth provider (google, facebook, apple)
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    try:
+        redirect_uri = url_for('auth.oauth_callback', provider=provider, _external=True)
+        authorization_url, state = OAuthService.get_authorization_url(provider, redirect_uri)
+        return redirect(authorization_url)
+    
+    except ValueError as e:
+        flash(f'OAuth login failed: {str(e)}', 'error')
+        return redirect(url_for('auth.login'))
+    except Exception as e:
+        flash('OAuth service is temporarily unavailable. Please try email login.', 'error')
+        return redirect(url_for('auth.login'))
+
+
+@auth_bp.route('/oauth/<provider>/callback', methods=['GET', 'POST'])
+def oauth_callback(provider):
+    """
+    Handle OAuth callback from provider after user authorization.
+    
+    Args:
+        provider: OAuth provider (google, facebook, apple)
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    try:
+        # Get authorization code and state from callback
+        code = request.args.get('code') or request.form.get('code')
+        state = request.args.get('state') or request.form.get('state')
+        error = request.args.get('error') or request.form.get('error')
+        
+        # Handle OAuth provider errors
+        if error:
+            error_description = request.args.get('error_description', 'Unknown error')
+            flash(f'OAuth login cancelled or failed: {error_description}', 'error')
+            return redirect(url_for('auth.login'))
+        
+        if not code or not state:
+            flash('OAuth callback missing required parameters', 'error')
+            return redirect(url_for('auth.login'))
+        
+        # Validate state parameter for CSRF protection
+        if not OAuthService.validate_state(state):
+            flash('OAuth security validation failed. Please try again.', 'error')
+            return redirect(url_for('auth.login'))
+        
+        # Exchange code for user info
+        redirect_uri = url_for('auth.oauth_callback', provider=provider, _external=True)
+        user_info = OAuthService.get_user_info(provider, code, redirect_uri)
+        
+        if not user_info:
+            flash('Failed to retrieve user information from OAuth provider', 'error')
+            return redirect(url_for('auth.login'))
+        
+        # Find or create user
+        user = OAuthService.find_or_create_user(provider, user_info)
+        
+        if not user:
+            flash('Failed to create or link user account. Please try again or contact support.', 'error')
+            return redirect(url_for('auth.login'))
+        
+        # Login user
+        if OAuthService.login_oauth_user(user):
+            flash(f'Welcome! You have been logged in via {provider.title()}.', 'success')
+            
+            # Redirect to next page if provided, otherwise to dashboard
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            return redirect(url_for('auth.dashboard'))
+        else:
+            flash('Login failed after OAuth authentication. Please try again.', 'error')
+            return redirect(url_for('auth.login'))
+    
+    except Exception as e:
+        flash('OAuth login encountered an unexpected error. Please try email login.', 'error')
+        return redirect(url_for('auth.login'))
+    
+    finally:
+        # Clean up OAuth session data
+        OAuthService.cleanup_oauth_session()
+
+
+# API endpoints for OAuth (for AJAX requests)
+
+@auth_bp.route('/api/oauth/<provider>')
+def api_oauth_login(provider):
+    """API endpoint to get OAuth authorization URL for AJAX clients."""
+    try:
+        redirect_uri = url_for('auth.oauth_callback', provider=provider, _external=True)
+        authorization_url, state = OAuthService.get_authorization_url(provider, redirect_uri)
+        
+        return jsonify({
+            'authorization_url': authorization_url,
+            'state': state
+        }), 200
+    
+    except ValueError as e:
+        return jsonify({
+            'error': str(e),
+            'code': 'INVALID_PROVIDER'
+        }), 400
+    except Exception:
+        return jsonify({
+            'error': 'OAuth service temporarily unavailable',
+            'code': 'OAUTH_UNAVAILABLE'
+        }), 503
