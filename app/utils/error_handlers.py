@@ -5,7 +5,7 @@ from werkzeug.exceptions import HTTPException
 
 def register_error_handlers(app):
     """Register error handlers with the Flask application."""
-    
+
     @app.errorhandler(404)
     def not_found_error(error):
         """Handle 404 Not Found errors."""
@@ -15,7 +15,7 @@ def register_error_handlers(app):
                 "code": "not_found"
             }), 404
         return render_template('errors/404.html'), 404
-    
+
     @app.errorhandler(500)
     def internal_error(error):
         """Handle 500 Internal Server errors."""
@@ -25,7 +25,7 @@ def register_error_handlers(app):
                 "code": "internal_error"
             }), 500
         return render_template('errors/500.html'), 500
-    
+
     @app.errorhandler(403)
     def forbidden_error(error):
         """Handle 403 Forbidden errors."""
@@ -35,7 +35,7 @@ def register_error_handlers(app):
                 "code": "forbidden"
             }), 403
         return render_template('errors/404.html'), 403
-    
+
     @app.errorhandler(HTTPException)
     def handle_http_exception(error):
         """Handle all other HTTP exceptions."""
@@ -45,7 +45,7 @@ def register_error_handlers(app):
                 "code": f"http_{error.code}"
             }), error.code
         return render_template('errors/500.html'), error.code
-    
+
     @app.errorhandler(Exception)
     def handle_general_exception(error):
         """Handle all unhandled exceptions."""

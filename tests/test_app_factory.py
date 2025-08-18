@@ -6,7 +6,11 @@ from app import create_app
 def test_config():
     """Test app configuration."""
     assert not create_app().testing
-    assert create_app({'TESTING': True}).testing
+    test_config = {
+        'TESTING': True,
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:'
+    }
+    assert create_app(test_config).testing
 
 
 def test_app_creation():
