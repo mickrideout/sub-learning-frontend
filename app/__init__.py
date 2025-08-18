@@ -72,7 +72,7 @@ def create_app(test_config=None):
     @login_manager.user_loader
     def load_user(user_id):
         """Load user from the database for Flask-Login session management."""
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     # Ensure instance folder exists
     os.makedirs(app.instance_path, exist_ok=True)

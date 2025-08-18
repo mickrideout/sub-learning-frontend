@@ -202,11 +202,15 @@ class OAuthService:
             # Check if user exists with same email (for account linking)
             existing_email_user = User.query.filter_by(email=email).first()
             if existing_email_user:
-                # Link OAuth to existing account
+                # Link OAuth to existing account if no OAuth provider set
                 if not existing_email_user.oauth_provider:
                     existing_email_user.oauth_provider = provider
                     existing_email_user.oauth_id = oauth_id
+                    existing_email_user.email_verified = True  # OAuth emails are verified
                     db.session.commit()
+                    return existing_email_user
+                # If same provider but different oauth_id, return existing user (no change)
+                elif existing_email_user.oauth_provider == provider:
                     return existing_email_user
                 else:
                     current_app.logger.warning(f"Email {email} already linked to different OAuth provider")
