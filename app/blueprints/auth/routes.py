@@ -1,0 +1,224 @@
+"""Authentication routes and endpoints."""
+from flask import render_template, request, flash, redirect, url_for, jsonify
+from flask_login import login_user, logout_user, login_required, current_user
+from app.blueprints.auth import auth_bp
+from app.blueprints.auth.forms import (
+    RegistrationForm, LoginForm, PasswordResetRequestForm, PasswordResetForm
+)
+from app.services.auth_service import AuthService, AuthenticationError
+
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    """User registration route with form handling and validation."""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    form = RegistrationForm()
+
+    if form.validate_on_submit():
+        try:
+            AuthService.register_user(
+                email=form.email.data,
+                password=form.password.data
+            )
+            flash('Registration successful! Please log in.', 'success')
+            return redirect(url_for('auth.login'))
+
+        except AuthenticationError as e:
+            flash(str(e), 'error')
+
+    return render_template('auth/register.html', form=form)
+
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login route with credential validation and session creation."""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        try:
+            user = AuthService.authenticate_user(
+                email=form.email.data,
+                password=form.password.data
+            )
+            login_user(user, remember=form.remember_me.data)
+
+            # Redirect to next page if provided, otherwise to main index
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            return redirect(url_for('main.index'))
+
+        except AuthenticationError as e:
+            flash(str(e), 'error')
+
+    return render_template('auth/login.html', form=form)
+
+
+@auth_bp.route('/logout')
+@login_required
+def logout():
+    """Logout route with session cleanup and redirect."""
+    logout_user()
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('main.index'))
+
+
+@auth_bp.route('/password-reset-request', methods=['GET', 'POST'])
+def password_reset_request():
+    """Password reset request route."""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    form = PasswordResetRequestForm()
+
+    if form.validate_on_submit():
+        try:
+            # Generate password reset token (basic implementation)
+            token = AuthService.generate_password_reset_token()
+
+            # In a full implementation, we would:
+            # 1. Store the token in database with expiration
+            # 2. Send email with reset link containing the token
+            # For now, we'll just flash a message with the token
+
+            flash(f'Password reset instructions sent to {form.email.data}. '
+                  f'Reset token: {token}', 'info')
+            return redirect(url_for('auth.password_reset', token=token,
+                                    email=form.email.data))
+
+        except AuthenticationError as e:
+            flash(str(e), 'error')
+
+    return render_template('auth/password_reset_request.html', form=form)
+
+
+@auth_bp.route('/password-reset')
+def password_reset():
+    """Password reset confirmation route."""
+    token = request.args.get('token')
+    email = request.args.get('email')
+
+    if not token or not email:
+        flash('Invalid password reset link.', 'error')
+        return redirect(url_for('auth.login'))
+
+    if not AuthService.validate_password_reset_token(token):
+        flash('Invalid or expired password reset token.', 'error')
+        return redirect(url_for('auth.login'))
+
+    form = PasswordResetForm()
+
+    if form.validate_on_submit():
+        try:
+            AuthService.reset_password(email, form.password.data)
+            flash('Your password has been reset successfully. '
+                  'Please log in.', 'success')
+            return redirect(url_for('auth.login'))
+
+        except AuthenticationError as e:
+            flash(str(e), 'error')
+
+    return render_template('auth/password_reset.html', form=form, email=email)
+
+
+@auth_bp.route('/profile')
+@login_required
+def profile():
+    """User profile route displaying logged-in user information."""
+    return render_template('auth/profile.html', user=current_user)
+
+
+@auth_bp.route('/dashboard')
+@login_required
+def dashboard():
+    """Basic dashboard route for authenticated users."""
+    return render_template('auth/dashboard.html', user=current_user)
+
+
+# API endpoints for AJAX requests
+
+@auth_bp.route('/api/register', methods=['POST'])
+def api_register():
+    """API endpoint for user registration."""
+    try:
+        data = request.get_json()
+
+        if not data or not data.get('email') or not data.get('password'):
+            return jsonify({
+                'error': 'Email and password are required',
+                'code': 'MISSING_FIELDS'
+            }), 400
+
+        user = AuthService.register_user(
+            email=data['email'],
+            password=data['password'],
+            native_language_id=data.get('native_language_id'),
+            target_language_id=data.get('target_language_id')
+        )
+
+        return jsonify({
+            'message': 'Registration successful',
+            'user': user.to_dict()
+        }), 201
+
+    except AuthenticationError as e:
+        return jsonify({
+            'error': str(e),
+            'code': 'REGISTRATION_FAILED'
+        }), 400
+    except Exception:
+        return jsonify({
+            'error': 'Internal server error',
+            'code': 'INTERNAL_ERROR'
+        }), 500
+
+
+@auth_bp.route('/api/login', methods=['POST'])
+def api_login():
+    """API endpoint for user login."""
+    try:
+        data = request.get_json()
+
+        if not data or not data.get('email') or not data.get('password'):
+            return jsonify({
+                'error': 'Email and password are required',
+                'code': 'MISSING_FIELDS'
+            }), 400
+
+        user = AuthService.authenticate_user(
+            email=data['email'],
+            password=data['password']
+        )
+
+        login_user(user, remember=data.get('remember_me', False))
+
+        return jsonify({
+            'message': 'Login successful',
+            'user': user.to_dict()
+        }), 200
+
+    except AuthenticationError as e:
+        return jsonify({
+            'error': str(e),
+            'code': 'AUTHENTICATION_FAILED'
+        }), 401
+    except Exception:
+        return jsonify({
+            'error': 'Internal server error',
+            'code': 'INTERNAL_ERROR'
+        }), 500
+
+
+@auth_bp.route('/api/logout', methods=['POST'])
+@login_required
+def api_logout():
+    """API endpoint for user logout."""
+    logout_user()
+    return jsonify({
+        'message': 'Logout successful'
+    }), 200

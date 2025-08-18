@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sub Learning{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Welcome, {{ user.email }}!</h1>
+            <div>
+                <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-primary me-2">View Profile</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Account Status</h5>
+                <p class="card-text">
+                    {% if user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                    {% endif %}
+                </p>
+                <p class="card-text">
+                    <small class="text-muted">Member since {{ user.created_at.strftime('%B %Y') if user.created_at else 'N/A' }}</small>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Learning Progress</h5>
+                <p class="card-text">Your language learning journey starts here!</p>
+                <p class="card-text">
+                    <small class="text-muted">Feature coming soon in future updates</small>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('auth.profile') }}" class="btn btn-primary btn-sm">View Profile</a>
+                    <button type="button" class="btn btn-outline-primary btn-sm" disabled>Start Learning</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled>View Subtitles</button>
+                </div>
+                <p class="card-text">
+                    <small class="text-muted">More features coming soon</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Recent Activity</h5>
+                <p class="card-text">No recent activity to display.</p>
+                <p class="card-text">
+                    <small class="text-muted">Activity tracking will be available in future updates</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,10 +1,11 @@
 """User model for authentication and user management."""
 from datetime import datetime
+from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     """User model with authentication and OAuth support."""
 
     __tablename__ = 'users'

@@ -2,7 +2,8 @@
 import os
 import sys
 from datetime import datetime, UTC
-from flask import jsonify
+from flask import jsonify, render_template, redirect, url_for
+from flask_login import current_user
 from sqlalchemy import text
 
 from app.blueprints.main import main_bp
@@ -104,12 +105,7 @@ def database_health_check():
 
 @main_bp.route('/', methods=['GET'])
 def index():
-    """Basic index route."""
-    return jsonify({
-        "message": "Sub Learning Application",
-        "status": "running",
-        "endpoints": {
-            "health": "/health",
-            "database_health": "/health/database"
-        }
-    }), 200
+    """Main landing page route."""
+    if current_user.is_authenticated:
+        return redirect(url_for('auth.dashboard'))
+    return render_template('index.html')

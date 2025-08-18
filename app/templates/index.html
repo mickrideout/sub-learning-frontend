@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Sub Learning - Language Learning Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 text-center">
+        <div class="py-5">
+            <h1 class="display-4 mb-4">Sub Learning</h1>
+            <p class="lead mb-4">Learn languages through subtitles and interactive content</p>
+            
+            <div class="mb-5">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-3">Get Started</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg">Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">🎬 Subtitle Learning</h5>
+                <p class="card-text">Learn languages naturally through movie and TV show subtitles with interactive features.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">📊 Track Progress</h5>
+                <p class="card-text">Monitor your learning progress with detailed analytics and personalized recommendations.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">🌍 Multiple Languages</h5>
+                <p class="card-text">Support for multiple language pairs to help you achieve your language learning goals.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12 text-center">
+        <h3>Ready to start your language learning journey?</h3>
+        <p class="lead">Join thousands of learners using subtitles to master new languages.</p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-success btn-lg">Sign Up Now</a>
+    </div>
+</div>
+{% endblock %}

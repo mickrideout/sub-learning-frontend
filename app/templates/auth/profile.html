@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Sub Learning{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title mb-4">User Profile</h2>
+                
+                <!-- Display flash messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Account Information</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>User ID:</strong></td>
+                                <td>{{ user.id }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td>{{ user.email }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Account Status:</strong></td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Registration:</strong></td>
+                                <td>{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Last Update:</strong></td>
+                                <td>{{ user.updated_at.strftime('%B %d, %Y') if user.updated_at else 'N/A' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>Authentication Method</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Login Method:</strong></td>
+                                <td>
+                                    {% if user.oauth_provider %}
+                                        <span class="badge bg-info">{{ user.oauth_provider|title }} OAuth</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">Email/Password</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if user.oauth_provider %}
+                            <tr>
+                                <td><strong>OAuth Provider:</strong></td>
+                                <td>{{ user.oauth_provider|title }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>OAuth ID:</strong></td>
+                                <td>{{ user.oauth_id[:20] + '...' if user.oauth_id and user.oauth_id|length > 20 else user.oauth_id }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                
+                {% if user.native_language_id or user.target_language_id %}
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <h5>Language Preferences</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Native Language ID:</strong></td>
+                                <td>{{ user.native_language_id or 'Not set' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Target Language ID:</strong></td>
+                                <td>{{ user.target_language_id or 'Not set' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Back to Home</a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
