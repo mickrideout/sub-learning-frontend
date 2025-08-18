@@ -109,3 +109,11 @@ def index():
     if current_user.is_authenticated:
         return redirect(url_for('auth.dashboard'))
     return render_template('index.html')
+
+
+@main_bp.route('/movies', methods=['GET'])
+def movies():
+    """Movie catalog page displaying available movies."""
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
+    return render_template('main/movies.html')

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Movie Catalog - Subtitle Learning{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">Movie Catalog</h1>
+                <a href="{{ url_for('auth.dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loading-indicator" class="text-center py-4">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading movies...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading available movies...</p>
+            </div>
+
+            <!-- Error message -->
+            <div id="error-message" class="alert alert-danger d-none" role="alert">
+                <h5 class="alert-heading">Error Loading Movies</h5>
+                <p id="error-text"></p>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="movieDiscovery.loadMovies()">
+                    Try Again
+                </button>
+            </div>
+
+            <!-- Movie list container -->
+            <div id="movie-list-container" class="d-none">
+                <div class="row mb-3">
+                    <div class="col">
+                        <p class="text-muted mb-0">
+                            Showing movies with subtitles available for your language pair: 
+                            <span id="language-pair" class="badge bg-primary"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Movie list -->
+                <div id="movie-list" class="list-group">
+                    <!-- Movies will be populated here by JavaScript -->
+                </div>
+
+                <!-- Empty state -->
+                <div id="empty-state" class="text-center py-5 d-none">
+                    <div class="mb-3">
+                        <i class="fas fa-film fa-3x text-muted"></i>
+                    </div>
+                    <h4>No Movies Available</h4>
+                    <p class="text-muted">
+                        No movies found with subtitles for your selected language pair.<br>
+                        Try updating your language preferences in your profile.
+                    </p>
+                    <a href="{{ url_for('auth.profile') }}" class="btn btn-primary">
+                        Update Language Preferences
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Movie selection confirmation modal -->
+<div class="modal fade" id="movieSelectionModal" tabindex="-1" aria-labelledby="movieSelectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="movieSelectionModalLabel">Start Learning Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You've selected: <strong id="selected-movie-title"></strong></p>
+                <p class="text-muted">Ready to start your subtitle learning session?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-movie-selection">
+                    Start Learning Session
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/modules/movie-discovery.js') }}"></script>
+<script>
+    // Initialize movie discovery component when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        window.movieDiscovery = new MovieDiscovery();
+        movieDiscovery.init();
+    });
+</script>
+{% endblock %}

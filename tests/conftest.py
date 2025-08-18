@@ -19,6 +19,45 @@ def app():
 
     with app.app_context():
         database.create_all()
+        
+        # Add sample data for testing
+        from app.models import Language, SubTitle, SubLink
+        
+        # Create sample languages
+        languages = [
+            Language(id=1, name='english', display_name='English', code='en'),
+            Language(id=2, name='spanish', display_name='Spanish', code='es'),
+            Language(id=3, name='french', display_name='French', code='fr'),
+            Language(id=4, name='german', display_name='German', code='de'),
+            Language(id=5, name='italian', display_name='Italian', code='it'),
+        ]
+        for lang in languages:
+            database.session.add(lang)
+        
+        # Create sample movies
+        movies = [
+            SubTitle(id=1, title='The Matrix'),
+            SubTitle(id=2, title='Inception'),
+            SubTitle(id=3, title='Pulp Fiction'),
+            SubTitle(id=4, title='The Godfather'),
+            SubTitle(id=5, title='Casablanca'),
+        ]
+        for movie in movies:
+            database.session.add(movie)
+        
+        # Create sample subtitle links
+        links = [
+            SubLink(id=1, fromid=1, fromlang=1, toid=1, tolang=2),  # Matrix EN->ES
+            SubLink(id=2, fromid=1, fromlang=1, toid=1, tolang=3),  # Matrix EN->FR
+            SubLink(id=3, fromid=2, fromlang=1, toid=2, tolang=2),  # Inception EN->ES
+            SubLink(id=4, fromid=3, fromlang=1, toid=3, tolang=2),  # Pulp Fiction EN->ES
+            SubLink(id=5, fromid=4, fromlang=1, toid=4, tolang=5),  # Godfather EN->IT
+        ]
+        for link in links:
+            database.session.add(link)
+        
+        database.session.commit()
+        
         yield app
         database.drop_all()
 
@@ -42,7 +81,7 @@ def db(app):
 
 
 @pytest.fixture
-def authenticated_user(app, client):
+def auth_user(app, client):
     """Create and authenticate a test user."""
     with app.app_context():
         user = User(email='test@example.com')

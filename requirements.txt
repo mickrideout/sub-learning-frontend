@@ -3,13 +3,14 @@ Flask==2.3.3
 Werkzeug==2.3.7
 
 # Database and ORM
-SQLAlchemy==2.0.23
+SQLAlchemy==2.0.36
 Flask-SQLAlchemy==3.1.1
 Flask-Migrate==4.0.5
 
 # Authentication
 Flask-Login==0.6.3
 Authlib==1.2.1
+requests==2.31.0
 
 # Forms and validation
 WTForms==3.1.0
