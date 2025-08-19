@@ -154,10 +154,14 @@ class SubtitleService:
 
         try:
             # Check if there are subtitle links for the user's language pair and this movie
+            # Also ensure the specific language requested has subtitle content
             query = text("""
                 SELECT COUNT(*) as count
                 FROM sub_links sl
+                JOIN sub_lines sline ON (sline.movie_id = sl.fromid OR sline.movie_id = sl.toid)
                 WHERE (sl.fromid = :movie_id OR sl.toid = :movie_id)
+                  AND sline.movie_id = :movie_id
+                  AND sline.language_id = :language_id
                   AND ((sl.fromlang = :native_lang AND sl.tolang = :target_lang) 
                        OR (sl.fromlang = :target_lang AND sl.tolang = :native_lang))
             """)
@@ -165,6 +169,7 @@ class SubtitleService:
             with db.engine.connect() as conn:
                 result = conn.execute(query, {
                     'movie_id': movie_id,
+                    'language_id': language_id,
                     'native_lang': user_native_lang,
                     'target_lang': user_target_lang
                 }).fetchone()

@@ -150,6 +150,12 @@ class SubtitleCache:
             total_requests = self._hits + self._misses
             hit_rate = (self._hits / total_requests * 100) if total_requests > 0 else 0
             
+            # Calculate memory usage estimate
+            memory_estimate = sum(
+                len(str(content)) + len(key) 
+                for key, (content, _) in self._cache.items()
+            )
+            
             return {
                 'hits': self._hits,
                 'misses': self._misses,
@@ -157,7 +163,9 @@ class SubtitleCache:
                 'hit_rate_percent': round(hit_rate, 2),
                 'cache_size': len(self._cache),
                 'max_size': self.max_size,
-                'default_ttl': self.default_ttl
+                'default_ttl': self.default_ttl,
+                'memory_estimate_bytes': memory_estimate,
+                'timestamp': time.time()
             }
     
     def warm_cache(self, subtitle_data: Dict[Tuple[int, int], Any]) -> None:

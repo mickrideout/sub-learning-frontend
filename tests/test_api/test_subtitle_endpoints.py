@@ -39,11 +39,13 @@ class TestSubtitleEndpoints:
         """Test subtitle retrieval with invalid movie ID."""
         mock_current_user.return_value = mock_user
         
-        # Test with negative movie ID
-        response = client.get('/api/movies/-1/subtitles?lang=1')
-        assert response.status_code == 400
-        data = json.loads(response.data)
-        assert data['code'] == 'INVALID_MOVIE_ID'
+        with client.application.test_request_context():
+            with patch('flask_login.utils._get_user') as mock_get_user:
+                mock_get_user.return_value = mock_user
+                response = client.get('/api/movies/0/subtitles?lang=1')
+                assert response.status_code == 400
+                data = json.loads(response.data)
+                assert data['code'] == 'INVALID_MOVIE_ID'
 
     @patch('app.blueprints.api.subtitles.current_user')
     def test_get_movie_subtitles_missing_language_parameter(self, mock_current_user, client, mock_user):

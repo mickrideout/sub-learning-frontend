@@ -1,15 +1,50 @@
 """Subtitle API endpoints for subtitle retrieval and availability checking."""
-from flask import jsonify, request
+from flask import jsonify, request, g
 from flask_login import login_required, current_user
 from app.blueprints.api import api_bp
 from app.services.subtitle_service import SubtitleService
 import logging
+import time
+from functools import wraps
+
+# Simple rate limiting storage (in production, use Redis)
+_rate_limit_storage = {}
+
+def rate_limit(requests_per_minute: int = 60):
+    """Simple rate limiting decorator."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            user_id = getattr(current_user, 'id', 'anonymous')
+            now = time.time()
+            window_start = now - 60  # 1 minute window
+            
+            if user_id not in _rate_limit_storage:
+                _rate_limit_storage[user_id] = []
+            
+            # Clean old requests
+            _rate_limit_storage[user_id] = [
+                req_time for req_time in _rate_limit_storage[user_id] 
+                if req_time > window_start
+            ]
+            
+            if len(_rate_limit_storage[user_id]) >= requests_per_minute:
+                return jsonify({
+                    'error': 'Rate limit exceeded. Too many requests.',
+                    'code': 'RATE_LIMIT_EXCEEDED'
+                }), 429
+            
+            _rate_limit_storage[user_id].append(now)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 logger = logging.getLogger(__name__)
 
 
 @api_bp.route('/movies/<int:movie_id>/subtitles', methods=['GET'])
 @login_required
+@rate_limit(30)  # 30 requests per minute
 def get_movie_subtitles(movie_id):
     """
     Retrieve subtitle content for a specific movie and language.
@@ -123,6 +158,7 @@ def get_movie_subtitles(movie_id):
 
 @api_bp.route('/movies/<int:movie_id>/subtitles/availability', methods=['GET'])
 @login_required
+@rate_limit(60)  # 60 requests per minute for availability checks
 def get_subtitle_availability(movie_id):
     """
     Check subtitle availability for a specific movie.
