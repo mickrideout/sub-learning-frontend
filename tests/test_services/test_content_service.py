@@ -83,3 +83,119 @@ class TestContentService:
             # Test with non-existent language IDs
             assert ContentService.validate_language_pair(999, 1000) is False
             assert ContentService.validate_language_pair(1, 999) is False
+
+    def test_get_available_movies_with_search_query(self, app):
+        """Test getting movies with search query filtering."""
+        with app.app_context():
+            # Test searching for "Matrix" movies
+            movies = ContentService.get_available_movies(1, 2, search_query="Matrix")
+            
+            assert isinstance(movies, list)
+            # Should find The Matrix movie
+            assert len(movies) > 0
+            
+            # All returned movies should contain "Matrix" in title (case-insensitive)
+            for movie in movies:
+                assert 'matrix' in movie['title'].lower()
+                assert 'id' in movie
+                assert 'title' in movie
+                assert 'subtitle_links_count' in movie
+                assert 'has_subtitles' in movie
+
+    def test_get_available_movies_with_search_case_insensitive(self, app):
+        """Test that search query is case-insensitive."""
+        with app.app_context():
+            # Test with different cases - should return same results
+            movies_lower = ContentService.get_available_movies(1, 2, search_query="matrix")
+            movies_upper = ContentService.get_available_movies(1, 2, search_query="MATRIX")
+            movies_mixed = ContentService.get_available_movies(1, 2, search_query="Matrix")
+            
+            # All searches should return the same movies
+            assert len(movies_lower) == len(movies_upper) == len(movies_mixed)
+            
+            # Convert to sets of movie IDs for comparison
+            ids_lower = {movie['id'] for movie in movies_lower}
+            ids_upper = {movie['id'] for movie in movies_upper}
+            ids_mixed = {movie['id'] for movie in movies_mixed}
+            
+            assert ids_lower == ids_upper == ids_mixed
+
+    def test_get_available_movies_with_search_partial_matching(self, app):
+        """Test that search supports partial title matching."""
+        with app.app_context():
+            # Test partial matching - "Mat" should match "Matrix"
+            movies_partial = ContentService.get_available_movies(1, 2, search_query="Mat")
+            movies_full = ContentService.get_available_movies(1, 2, search_query="Matrix")
+            
+            assert isinstance(movies_partial, list)
+            assert isinstance(movies_full, list)
+            
+            # Partial search should return at least as many results as full search
+            # (since "Mat" is contained in "Matrix")
+            assert len(movies_partial) >= len(movies_full)
+            
+            # All movies in full search should also be in partial search
+            full_ids = {movie['id'] for movie in movies_full}
+            partial_ids = {movie['id'] for movie in movies_partial}
+            assert full_ids.issubset(partial_ids)
+
+    def test_get_available_movies_with_search_no_results(self, app):
+        """Test search query that returns no results."""
+        with app.app_context():
+            # Search for non-existent movie title
+            movies = ContentService.get_available_movies(1, 2, search_query="NonExistentMovieTitle12345")
+            
+            assert isinstance(movies, list)
+            assert len(movies) == 0
+
+    def test_get_available_movies_with_empty_search_query(self, app):
+        """Test that empty search query returns all movies."""
+        with app.app_context():
+            # Get all movies without search
+            all_movies = ContentService.get_available_movies(1, 2)
+            
+            # Get movies with empty search query
+            empty_search_movies = ContentService.get_available_movies(1, 2, search_query="")
+            
+            # Should return the same results
+            assert len(all_movies) == len(empty_search_movies)
+            
+            # Convert to sets for comparison
+            all_ids = {movie['id'] for movie in all_movies}
+            empty_search_ids = {movie['id'] for movie in empty_search_movies}
+            assert all_ids == empty_search_ids
+
+    def test_get_available_movies_search_sql_injection_protection(self, app):
+        """Test that search query is protected against SQL injection."""
+        with app.app_context():
+            # Try various SQL injection patterns
+            malicious_queries = [
+                "'; DROP TABLE sub_titles; --",
+                "' OR '1'='1",
+                "' UNION SELECT * FROM users --",
+                "%'; DELETE FROM sub_titles; --"
+            ]
+            
+            for malicious_query in malicious_queries:
+                # Should not raise an exception and should return empty results
+                # (since these aren't real movie titles)
+                movies = ContentService.get_available_movies(1, 2, search_query=malicious_query)
+                assert isinstance(movies, list)
+                # Most likely empty results, but shouldn't crash
+
+    def test_get_available_movies_search_special_characters(self, app):
+        """Test search with special characters that need escaping."""
+        with app.app_context():
+            # Test with SQL wildcards that should be escaped
+            special_queries = [
+                "Movie%",
+                "Movie_",
+                "Movie%Title",
+                "Movie_Title"
+            ]
+            
+            for query in special_queries:
+                # Should handle these gracefully without treating % and _ as wildcards
+                movies = ContentService.get_available_movies(1, 2, search_query=query)
+                assert isinstance(movies, list)
+                # Results should only match literal text, not wildcard patterns

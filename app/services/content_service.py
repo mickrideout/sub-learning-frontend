@@ -8,13 +8,14 @@ class ContentService:
     """Service class for managing movie content and subtitle availability."""
 
     @staticmethod
-    def get_available_movies(native_language_id: int, target_language_id: int) -> List[Dict]:
+    def get_available_movies(native_language_id: int, target_language_id: int, search_query: Optional[str] = None) -> List[Dict]:
         """
-        Get movies available for a specific language pair.
+        Get movies available for a specific language pair, optionally filtered by search query.
         
         Args:
             native_language_id: User's native language ID
             target_language_id: User's target language ID
+            search_query: Optional search query for partial title matching (case-insensitive)
             
         Returns:
             List of movie dictionaries with id, title, and subtitle availability info
@@ -30,23 +31,39 @@ class ContentService:
             raise ValueError("Native and target languages must be different")
 
         try:
-            # Query for movies with available subtitle links between the language pair
-            query = text("""
+            # Base query for movies with available subtitle links between the language pair
+            base_query = """
                 SELECT DISTINCT st.id, st.title,
                        COUNT(sl.id) as subtitle_links_count
                 FROM sub_titles st
                 JOIN sub_links sl ON st.id = sl.fromid OR st.id = sl.toid
-                WHERE (sl.fromlang = :native_lang AND sl.tolang = :target_lang) 
-                   OR (sl.fromlang = :target_lang AND sl.tolang = :native_lang)
+                WHERE ((sl.fromlang = :native_lang AND sl.tolang = :target_lang) 
+                    OR (sl.fromlang = :target_lang AND sl.tolang = :native_lang))
+            """
+            
+            # Add search filter if search query is provided
+            if search_query:
+                base_query += " AND LOWER(st.title) LIKE LOWER(:search_pattern)"
+            
+            base_query += """
                 GROUP BY st.id, st.title
                 ORDER BY st.title ASC
-            """)
+            """
+
+            query = text(base_query)
+            query_params = {
+                'native_lang': native_language_id,
+                'target_lang': target_language_id
+            }
+            
+            # Add search pattern parameter if search query is provided
+            if search_query:
+                # Sanitize search query to prevent SQL injection
+                sanitized_query = search_query.replace('%', r'\%').replace('_', r'\_')
+                query_params['search_pattern'] = f'%{sanitized_query}%'
 
             with db.engine.connect() as conn:
-                result = conn.execute(query, {
-                    'native_lang': native_language_id,
-                    'target_lang': target_language_id
-                })
+                result = conn.execute(query, query_params)
                 
                 movies = []
                 for row in result:

@@ -5,8 +5,11 @@
 class MovieDiscovery {
     constructor() {
         this.movies = [];
+        this.allMovies = []; // Store all movies for highlighting
         this.selectedMovie = null;
         this.isLoading = false;
+        this.searchQuery = '';
+        this.searchTimeout = null;
         
         // DOM elements
         this.loadingIndicator = null;
@@ -14,10 +17,18 @@ class MovieDiscovery {
         this.movieListContainer = null;
         this.movieList = null;
         this.emptyState = null;
+        this.noSearchResults = null;
         this.languagePair = null;
         this.modal = null;
         this.selectedMovieTitle = null;
         this.confirmButton = null;
+        this.searchContainer = null;
+        this.searchInput = null;
+        this.clearSearchButton = null;
+        this.searchResultsInfo = null;
+        this.searchResultCount = null;
+        this.searchQueryDisplay = null;
+        this.clearSearchFromNoResults = null;
     }
 
     /**
@@ -26,6 +37,7 @@ class MovieDiscovery {
     init() {
         this.bindElements();
         this.setupEventListeners();
+        this.initializeSearchFromURL();
         this.loadMovies();
     }
 
@@ -38,9 +50,17 @@ class MovieDiscovery {
         this.movieListContainer = document.getElementById('movie-list-container');
         this.movieList = document.getElementById('movie-list');
         this.emptyState = document.getElementById('empty-state');
+        this.noSearchResults = document.getElementById('no-search-results');
         this.languagePair = document.getElementById('language-pair');
         this.selectedMovieTitle = document.getElementById('selected-movie-title');
         this.confirmButton = document.getElementById('confirm-movie-selection');
+        this.searchContainer = document.getElementById('search-container');
+        this.searchInput = document.getElementById('movie-search');
+        this.clearSearchButton = document.getElementById('clear-search');
+        this.searchResultsInfo = document.getElementById('search-results-info');
+        this.searchResultCount = document.getElementById('search-result-count');
+        this.searchQueryDisplay = document.getElementById('search-query-display');
+        this.clearSearchFromNoResults = document.getElementById('clear-search-from-no-results');
 
         // Initialize Bootstrap modal
         const modalElement = document.getElementById('movieSelectionModal');
@@ -58,6 +78,110 @@ class MovieDiscovery {
                 this.handleMovieConfirmation();
             });
         }
+
+        // Search input event listener with debouncing
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', (e) => {
+                this.handleSearchInput(e.target.value);
+            });
+
+            // Handle Enter key for immediate search
+            this.searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.performSearch(e.target.value);
+                }
+            });
+        }
+
+        // Clear search button
+        if (this.clearSearchButton) {
+            this.clearSearchButton.addEventListener('click', () => {
+                this.clearSearch();
+            });
+        }
+
+        // Clear search from no results state
+        if (this.clearSearchFromNoResults) {
+            this.clearSearchFromNoResults.addEventListener('click', () => {
+                this.clearSearch();
+            });
+        }
+
+        // Handle browser back/forward navigation
+        window.addEventListener('popstate', () => {
+            this.initializeSearchFromURL();
+            this.loadMovies();
+        });
+    }
+
+    /**
+     * Initialize search from URL parameters
+     */
+    initializeSearchFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchQuery = urlParams.get('search') || '';
+        this.searchQuery = searchQuery;
+        
+        if (this.searchInput) {
+            this.searchInput.value = searchQuery;
+        }
+    }
+
+    /**
+     * Handle search input with debouncing
+     */
+    handleSearchInput(value) {
+        // Clear existing timeout
+        if (this.searchTimeout) {
+            clearTimeout(this.searchTimeout);
+        }
+
+        // Set new timeout for debounced search
+        this.searchTimeout = setTimeout(() => {
+            this.performSearch(value);
+        }, 300); // 300ms debounce delay
+    }
+
+    /**
+     * Perform search and update URL
+     */
+    performSearch(query) {
+        const trimmedQuery = query.trim();
+        this.searchQuery = trimmedQuery;
+
+        // Update URL parameters
+        this.updateURLParams(trimmedQuery);
+
+        // Load movies with search query
+        this.loadMovies();
+    }
+
+    /**
+     * Clear search
+     */
+    clearSearch() {
+        this.searchQuery = '';
+        if (this.searchInput) {
+            this.searchInput.value = '';
+        }
+        this.updateURLParams('');
+        this.loadMovies();
+    }
+
+    /**
+     * Update URL parameters for search
+     */
+    updateURLParams(searchQuery) {
+        const url = new URL(window.location);
+        if (searchQuery) {
+            url.searchParams.set('search', searchQuery);
+        } else {
+            url.searchParams.delete('search');
+        }
+        
+        // Update URL without reloading page
+        window.history.pushState({}, '', url);
     }
 
     /**
@@ -68,7 +192,14 @@ class MovieDiscovery {
         this.hideError();
 
         try {
-            const response = await fetch('/api/movies', {
+            // Build API URL with search parameter if needed
+            let apiUrl = '/api/movies';
+            if (this.searchQuery) {
+                const params = new URLSearchParams({ search: this.searchQuery });
+                apiUrl += '?' + params.toString();
+            }
+
+            const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,7 +214,9 @@ class MovieDiscovery {
 
             const data = await response.json();
             this.movies = data.movies || [];
+            this.allMovies = this.movies; // Store for highlighting
             this.displayLanguagePair(data.language_pair);
+            this.displaySearchResults(data);
             this.renderMovies();
 
         } catch (error) {
@@ -104,6 +237,29 @@ class MovieDiscovery {
     }
 
     /**
+     * Display search results information
+     */
+    displaySearchResults(data) {
+        // Show search container once movies are loaded
+        if (this.searchContainer) {
+            this.searchContainer.classList.remove('d-none');
+        }
+
+        // Update search results info if search was performed
+        if (data.search && this.searchResultsInfo) {
+            this.searchResultsInfo.classList.remove('d-none');
+            if (this.searchResultCount) {
+                const resultText = data.search.result_count === 1 
+                    ? `Found 1 movie matching "${data.search.query}"` 
+                    : `Found ${data.search.result_count} movies matching "${data.search.query}"`;
+                this.searchResultCount.textContent = resultText;
+            }
+        } else if (this.searchResultsInfo) {
+            this.searchResultsInfo.classList.add('d-none');
+        }
+    }
+
+    /**
      * Render movies list
      */
     renderMovies() {
@@ -113,11 +269,17 @@ class MovieDiscovery {
         this.movieList.innerHTML = '';
 
         if (this.movies.length === 0) {
-            this.showEmptyState();
+            // Show appropriate empty state based on whether we're searching
+            if (this.searchQuery) {
+                this.showNoSearchResults();
+            } else {
+                this.showEmptyState();
+            }
             return;
         }
 
         this.hideEmptyState();
+        this.hideNoSearchResults();
         this.showMovieList();
 
         // Create movie list items
@@ -144,9 +306,14 @@ class MovieDiscovery {
             item.classList.remove('bg-light');
         });
 
+        // Get highlighted title if search query exists
+        const displayTitle = this.searchQuery ? 
+            this.highlightSearchTerm(movie.title, this.searchQuery) :
+            this.escapeHtml(movie.title);
+
         item.innerHTML = `
             <div>
-                <h6 class="mb-1">${this.escapeHtml(movie.title)}</h6>
+                <h6 class="mb-1">${displayTitle}</h6>
                 <small class="text-muted">
                     <i class="fas fa-closed-captioning me-1"></i>
                     Subtitles available
@@ -163,6 +330,23 @@ class MovieDiscovery {
         });
 
         return item;
+    }
+
+    /**
+     * Highlight search term in text with XSS protection
+     */
+    highlightSearchTerm(text, searchTerm) {
+        if (!searchTerm) return this.escapeHtml(text);
+        
+        // Escape both text and search term to prevent XSS
+        const escapedText = this.escapeHtml(text);
+        const escapedSearchTerm = this.escapeHtml(searchTerm);
+        
+        // Create regex for case-insensitive highlighting
+        const regex = new RegExp(`(${escapedSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        
+        // Replace with highlighted version
+        return escapedText.replace(regex, '<mark class="bg-warning">$1</mark>');
     }
 
     /**
@@ -291,6 +475,32 @@ class MovieDiscovery {
     hideEmptyState() {
         if (this.emptyState) {
             this.emptyState.classList.add('d-none');
+        }
+    }
+
+    /**
+     * Show no search results state
+     */
+    showNoSearchResults() {
+        if (this.noSearchResults) {
+            this.noSearchResults.classList.remove('d-none');
+            
+            // Update search query display
+            if (this.searchQueryDisplay) {
+                this.searchQueryDisplay.textContent = this.searchQuery;
+            }
+        }
+        if (this.movieListContainer) {
+            this.movieListContainer.classList.add('d-none');
+        }
+    }
+
+    /**
+     * Hide no search results state
+     */
+    hideNoSearchResults() {
+        if (this.noSearchResults) {
+            this.noSearchResults.classList.add('d-none');
         }
     }
 

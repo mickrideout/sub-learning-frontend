@@ -32,7 +32,7 @@ def app():
             Language(id=5, name='italian', display_name='Italian', code='it'),
         ]
         for lang in languages:
-            database.session.add(lang)
+            database.session.merge(lang)
         
         # Create sample movies
         movies = [
@@ -43,7 +43,7 @@ def app():
             SubTitle(id=5, title='Casablanca'),
         ]
         for movie in movies:
-            database.session.add(movie)
+            database.session.merge(movie)
         
         # Create sample subtitle links
         links = [
@@ -54,7 +54,7 @@ def app():
             SubLink(id=5, fromid=4, fromlang=1, toid=4, tolang=5),  # Godfather EN->IT
         ]
         for link in links:
-            database.session.add(link)
+            database.session.merge(link)
         
         database.session.commit()
         
