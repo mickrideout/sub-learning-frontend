@@ -20,7 +20,11 @@
       "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python -m flask db upgrade)",
       "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python:*)",
       "Bash(node:*)",
-      "Bash(export FLASK_APP=wsgi.py)"
+      "Bash(export FLASK_APP=wsgi.py)",
+      "Bash(FLASK_APP=app python -c \"from app import create_app, db; from app.models import Bookmark; app = create_app(); print(''Bookmark model loaded:'', Bookmark.__tablename__)\")",
+      "Bash(FLASK_APP=app python -m flask db revision --autogenerate -m \"Add Bookmark model for subtitle bookmarking functionality\")",
+      "Bash(rm:*)",
+      "Bash(FLASK_APP=app python -m flask db upgrade)"
     ],
     "deny": [],
     "ask": []
