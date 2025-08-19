@@ -127,8 +127,11 @@ class DualSubtitleDisplay {
             return this.createEmptyLineElement(alignmentIndex);
         }
         
+        // Create a lookup map for better performance with large datasets
+        const lineMap = new Map(allLines.map(line => [line.id, line]));
+        
         lineIds.forEach(lineId => {
-            const line = allLines.find(l => l.id === lineId);
+            const line = lineMap.get(lineId);
             if (line) {
                 const lineElement = this.createLineElement(line, alignmentIndex, lineId, type);
                 container.appendChild(lineElement);

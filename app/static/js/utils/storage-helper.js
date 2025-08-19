@@ -256,11 +256,17 @@ class StorageHelper {
      */
     clearAllData() {
         try {
-            const keys = Object.keys(localStorage);
-            keys.forEach(key => {
-                if (key.startsWith(this.keyPrefix)) {
-                    localStorage.removeItem(key);
+            // Use a more efficient approach to clear prefixed keys
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith(this.keyPrefix)) {
+                    keysToRemove.push(key);
                 }
+            }
+            
+            keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
             });
             return true;
         } catch (error) {

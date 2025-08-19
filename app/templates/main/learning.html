@@ -215,49 +215,59 @@
                 return;
             }
             
-            switch(event.key) {
-                case 'ArrowLeft':
-                    event.preventDefault();
-                    subtitlePlayer.previousAlignment();
-                    break;
-                case 'ArrowRight':
-                    event.preventDefault();
-                    subtitlePlayer.nextAlignment();
-                    break;
-                case ' ': // Spacebar
-                    event.preventDefault();
-                    subtitlePlayer.togglePlayback();
-                    break;
-                case 'Home':
-                    event.preventDefault();
-                    subtitlePlayer.jumpToBeginning();
-                    break;
-                case 'End':
-                    event.preventDefault();
-                    subtitlePlayer.jumpToEnd();
-                    break;
-                case '1':
-                    event.preventDefault();
-                    subtitlePlayer.setPlaybackSpeed(5000); // Slow
-                    break;
-                case '2':
-                    event.preventDefault();
-                    subtitlePlayer.setPlaybackSpeed(3000); // Normal
-                    break;
-                case '3':
-                    event.preventDefault();
-                    subtitlePlayer.setPlaybackSpeed(1000); // Fast
-                    break;
-                case 'Escape':
-                    event.preventDefault();
-                    if (subtitlePlayer.playbackState.isPlaying) {
-                        subtitlePlayer.pauseAutoPlay();
-                    }
-                    break;
-                case '?':
-                    event.preventDefault();
-                    showKeyboardShortcuts();
-                    break;
+            // Ensure subtitlePlayer is initialized before handling shortcuts
+            if (!subtitlePlayer) {
+                console.warn('SubtitlePlayer not yet initialized');
+                return;
+            }
+            
+            try {
+                switch(event.key) {
+                    case 'ArrowLeft':
+                        event.preventDefault();
+                        subtitlePlayer.previousAlignment();
+                        break;
+                    case 'ArrowRight':
+                        event.preventDefault();
+                        subtitlePlayer.nextAlignment();
+                        break;
+                    case ' ': // Spacebar
+                        event.preventDefault();
+                        subtitlePlayer.togglePlayback();
+                        break;
+                    case 'Home':
+                        event.preventDefault();
+                        subtitlePlayer.jumpToBeginning();
+                        break;
+                    case 'End':
+                        event.preventDefault();
+                        subtitlePlayer.jumpToEnd();
+                        break;
+                    case '1':
+                        event.preventDefault();
+                        subtitlePlayer.setPlaybackSpeed(5000); // Slow
+                        break;
+                    case '2':
+                        event.preventDefault();
+                        subtitlePlayer.setPlaybackSpeed(3000); // Normal
+                        break;
+                    case '3':
+                        event.preventDefault();
+                        subtitlePlayer.setPlaybackSpeed(1000); // Fast
+                        break;
+                    case 'Escape':
+                        event.preventDefault();
+                        if (subtitlePlayer.playbackState && subtitlePlayer.playbackState.isPlaying) {
+                            subtitlePlayer.pauseAutoPlay();
+                        }
+                        break;
+                    case '?':
+                        event.preventDefault();
+                        showKeyboardShortcuts();
+                        break;
+                }
+            } catch (error) {
+                console.error('Error handling keyboard shortcut:', error);
             }
         });
         

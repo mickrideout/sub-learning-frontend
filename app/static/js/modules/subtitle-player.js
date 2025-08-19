@@ -547,9 +547,7 @@ class SubtitlePlayer {
         this.updatePlaybackUI();
         
         // Start the timer
-        this.playbackState.timer = setInterval(() => {
-            this.autoAdvance();
-        }, this.playbackState.speed);
+        this.restartPlaybackTimer();
         
         // Save state
         this.savePlaybackState();
@@ -585,6 +583,12 @@ class SubtitlePlayer {
     setPlaybackSpeed(speed) {
         // Validate speed (1-5 seconds)
         const validSpeed = Math.max(1000, Math.min(5000, speed));
+        
+        // Only update if speed actually changed to avoid unnecessary work
+        if (this.playbackState.speed === validSpeed) {
+            return;
+        }
+        
         this.playbackState.speed = validSpeed;
         
         // Update UI
@@ -594,16 +598,25 @@ class SubtitlePlayer {
         
         // Restart timer if currently playing
         if (this.playbackState.isPlaying) {
-            clearInterval(this.playbackState.timer);
-            this.playbackState.timer = setInterval(() => {
-                this.autoAdvance();
-            }, this.playbackState.speed);
+            this.restartPlaybackTimer();
         }
         
         // Save state
         this.savePlaybackState();
     }
     
+    /**
+     * Restart playback timer with current speed
+     */
+    restartPlaybackTimer() {
+        if (this.playbackState.timer) {
+            clearInterval(this.playbackState.timer);
+        }
+        this.playbackState.timer = setInterval(() => {
+            this.autoAdvance();
+        }, this.playbackState.speed);
+    }
+
     /**
      * Automatically advance to next alignment
      */
