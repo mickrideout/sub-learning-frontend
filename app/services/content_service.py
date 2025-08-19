@@ -249,6 +249,60 @@ class ContentService:
             raise Exception(f"Database error while fetching letter counts: {str(e)}")
 
     @staticmethod
+    def get_movie_subtitle_availability(movie_id: int) -> Dict:
+        """
+        Get subtitle availability information for a specific movie.
+        
+        Args:
+            movie_id: Movie ID to check subtitle availability for
+            
+        Returns:
+            Dictionary with subtitle availability information
+            
+        Raises:
+            ValueError: If movie_id is invalid
+            Exception: For database connection issues
+        """
+        if not movie_id:
+            raise ValueError("movie_id is required")
+
+        try:
+            # Check if movie exists and get available subtitle languages
+            query = text("""
+                SELECT st.id, st.title,
+                       GROUP_CONCAT(DISTINCT sl.language_id) as available_languages
+                FROM sub_titles st
+                LEFT JOIN sub_lines sl ON st.id = sl.movie_id
+                WHERE st.id = :movie_id
+                GROUP BY st.id, st.title
+            """)
+
+            with db.engine.connect() as conn:
+                result = conn.execute(query, {'movie_id': movie_id}).fetchone()
+                
+                if not result:
+                    raise ValueError(f"Movie with ID {movie_id} not found")
+
+                available_languages = []
+                if result.available_languages:
+                    # Convert comma-separated string to list of integers
+                    available_languages = [
+                        int(lang_id) for lang_id in result.available_languages.split(',')
+                        if lang_id.strip()
+                    ]
+
+                return {
+                    'movie_id': result.id,
+                    'title': result.title,
+                    'has_subtitles': len(available_languages) > 0,
+                    'available_language_ids': available_languages,
+                    'subtitle_count': len(available_languages)
+                }
+
+        except exc.SQLAlchemyError as e:
+            raise Exception(f"Database error while checking subtitle availability: {str(e)}")
+
+    @staticmethod
     def _is_valid_letter_filter(letter: str) -> bool:
         """
         Validate letter filter parameter.

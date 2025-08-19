@@ -21,6 +21,35 @@ class SubTitle(db.Model):
         return f'<SubTitle {self.id}: {self.title}>'
 
 
+class SubLine(db.Model):
+    """Subtitle line model for storing individual subtitle content."""
+    
+    __tablename__ = 'sub_lines'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    movie_id = db.Column(db.Integer, db.ForeignKey('sub_titles.id'), nullable=False)
+    sequence = db.Column(db.Integer, nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    language_id = db.Column(db.Integer, db.ForeignKey('languages.id'), nullable=False)
+    
+    # Relationships
+    movie = db.relationship('SubTitle', backref='subtitle_lines')
+    language = db.relationship('Language', backref='subtitle_lines')
+    
+    def to_dict(self):
+        """Convert SubLine to dictionary for JSON serialization."""
+        return {
+            'id': self.id,
+            'movie_id': self.movie_id,
+            'sequence': self.sequence,
+            'content': self.content,
+            'language_id': self.language_id
+        }
+    
+    def __repr__(self):
+        return f'<SubLine {self.id}: Movie {self.movie_id}, Seq {self.sequence}>'
+
+
 class SubLink(db.Model):
     """Translation link model representing subtitle availability between languages."""
     
