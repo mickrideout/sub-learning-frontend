@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python test:*)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(python:*)",
+      "Bash(mkdir:*)",
+      "Bash(sqlite3:*)",
+      "Bash(export FLASK_APP=app)",
+      "Bash(flask run:*)",
+      "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python scripts/init_db.py --with-samples)",
+      "Bash(flask db migrate:*)",
+      "Bash(flask db:*)",
+      "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python -m flask db migrate -m \"Add subtitle models SubTitle and SubLink\")",
+      "Bash(pip install:*)",
+      "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python scripts/init_db.py)",
+      "Bash(curl:*)",
+      "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python -m flask db migrate -m \"Add SubLine model for subtitle content\")",
+      "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python -m flask db current)",
+      "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python -m flask db upgrade)",
+      "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python:*)",
+      "Bash(node:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
