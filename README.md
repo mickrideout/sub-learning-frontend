@@ -27,6 +27,32 @@ You need to have Python 3 and pip installed on your system.
 2.  Copy the contents of `.env.example` to the new `.env` file.
 3.  Update the values in the `.env` file with your own configuration.
 
+### Database
+
+To create the database, run the following command:
+
+```sh
+PYTHONPATH=. python scripts/init_db.py
+```
+
+To create the database with sample data, run:
+
+```sh
+PYTHONPATH=. python scripts/init_db.py --with-samples
+```
+
+When you change the database model, you need to create a migration script:
+
+```sh
+flask db migrate -m "Your migration message"
+```
+
+Then, apply the migration to the database:
+
+```sh
+flask db upgrade
+```
+
 ## Usage
 
 To run the application, execute the following command:

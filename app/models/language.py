@@ -7,7 +7,7 @@ class Language(db.Model):
 
     __tablename__ = 'languages'
 
-    id = db.Column(db.SmallInteger, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.Text, nullable=False, unique=True)
     display_name = db.Column(db.Text, nullable=False)
     code = db.Column(db.Text, nullable=False, unique=True)
