@@ -41,6 +41,7 @@
     background-color: #f8f9fa;
     transition: all 0.3s ease;
     cursor: pointer;
+    position: relative;
 }
 
 .subtitle-line:hover {
@@ -53,6 +54,29 @@
     color: white;
     border-left-color: #0056b3;
     box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+    animation: fadeInSlide 0.4s ease-out;
+}
+
+/* Smooth transition animations for auto-play */
+@keyframes fadeInSlide {
+    from {
+        opacity: 0.7;
+        transform: translateX(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.subtitle-line.auto-highlight {
+    animation: pulseHighlight 0.6s ease-in-out;
+}
+
+@keyframes pulseHighlight {
+    0% { box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3); }
+    50% { box-shadow: 0 4px 8px rgba(0, 123, 255, 0.6); }
+    100% { box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3); }
 }
 
 .subtitle-line-placeholder {
@@ -92,11 +116,24 @@
 .width-right-favor #source-column { flex: 0 0 33.333333%; max-width: 33.333333%; }
 .width-right-favor #target-column { flex: 0 0 66.666667%; max-width: 66.666667%; }
 
-/* Progress Bar Customization */
+/* Enhanced Progress Bar Customization */
+.progress-container {
+    position: relative;
+}
+
 .progress {
     height: 25px;
     background-color: #e9ecef;
     border-radius: 12px;
+}
+
+.clickable-progress {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.clickable-progress:hover {
+    transform: scaleY(1.1);
 }
 
 .progress-bar {
@@ -110,6 +147,15 @@
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
+.progress-details {
+    font-size: 0.85em;
+    margin-top: 4px;
+}
+
+.progress-details small {
+    color: #6c757d;
+}
+
 /* Control Button Styling */
 .controls-group .btn {
     border-radius: 20px;
@@ -121,11 +167,44 @@
     transition: transform 0.2s ease;
 }
 
+/* Playback Control Styling */
+#btn-play-pause {
+    min-width: 100px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+#btn-play-pause.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+#btn-play-pause.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+}
+
+#speed-selector {
+    min-width: 120px;
+}
+
 /* Navigation Button Styling */
 #btn-prev, #btn-next {
-    min-width: 120px;
+    min-width: 100px;
     border-radius: 25px;
     font-weight: 500;
+}
+
+#btn-first, #btn-last {
+    width: 40px;
+    border-radius: 20px;
+}
+
+#btn-shortcuts {
+    width: 40px;
+    height: 36px;
+    border-radius: 18px;
 }
 
 /* Loading and Error States */
@@ -229,7 +308,28 @@
     .font-medium { font-size: 0.95em; }
     .font-large { font-size: 1.05em; }
     .font-xlarge { font-size: 1.2em; }
-}
+    
+    /* Playback controls responsive layout */
+    #btn-play-pause {
+        min-width: 80px;
+        font-size: 0.9em;
+    }
+    
+    #speed-selector {
+        min-width: 100px;
+        font-size: 0.9em;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.9em;
+    }
+    
+    #btn-first, #btn-last, #btn-shortcuts {
+        width: 35px;
+        height: 32px;
+        font-size: 0.8em;
+    }
 
 /* Extra small devices */
 @media (max-width: 575.98px) {
@@ -295,16 +395,62 @@
     outline-offset: 2px;
 }
 
+/* Keyboard shortcuts styling */
+kbd {
+    padding: 2px 6px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+}
+
+/* Playback state indicators */
+.playback-indicator {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #28a745;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Boundary condition indicators */
+.subtitle-line.boundary-start {
+    border-left-color: #28a745;
+    background: linear-gradient(90deg, #d4edda 0%, #f8f9fa 100%);
+}
+
+.subtitle-line.boundary-end {
+    border-left-color: #dc3545;
+    background: linear-gradient(90deg, #f8d7da 0%, #f8f9fa 100%);
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     .subtitle-line,
     .btn-group .btn,
-    .progress-bar {
+    .progress-bar,
+    .clickable-progress {
         transition: none;
+        animation: none;
     }
     
     .subtitle-line:hover {
         transform: none;
+    }
+    
+    .playback-indicator {
+        animation: none;
     }
 }
 

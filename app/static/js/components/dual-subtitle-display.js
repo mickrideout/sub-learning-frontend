@@ -12,6 +12,7 @@ class DualSubtitleDisplay {
         this.currentAlignment = null;
         this.alignmentData = [];
         this.currentIndex = 0;
+        this.rapidNavigationMode = false;
         
         // Font size and layout preferences
         this.fontSize = this.loadPreference('fontSize', 'font-large');
@@ -172,7 +173,7 @@ class DualSubtitleDisplay {
     /**
      * Highlight current alignment and sync between columns
      */
-    highlightAlignment(index) {
+    highlightAlignment(index, smooth = false) {
         if (index < 0 || index >= this.alignmentData.length) {
             return;
         }
@@ -184,17 +185,35 @@ class DualSubtitleDisplay {
         const sourceLines = this.sourceColumn.querySelectorAll(`[data-index="${index}"]`);
         const targetLines = this.targetColumn.querySelectorAll(`[data-index="${index}"]`);
         
-        sourceLines.forEach(line => line.classList.add('active'));
-        targetLines.forEach(line => line.classList.add('active'));
+        sourceLines.forEach(line => {
+            line.classList.add('active');
+            if (smooth) {
+                line.classList.add('auto-highlight');
+                // Remove animation class after animation completes
+                setTimeout(() => line.classList.remove('auto-highlight'), 600);
+            }
+        });
+        
+        targetLines.forEach(line => {
+            line.classList.add('active');
+            if (smooth) {
+                line.classList.add('auto-highlight');
+                // Remove animation class after animation completes
+                setTimeout(() => line.classList.remove('auto-highlight'), 600);
+            }
+        });
+        
+        // Add boundary indicators
+        this.updateBoundaryIndicators(index);
         
         this.currentIndex = index;
         
-        // Scroll to ensure visibility
+        // Scroll to ensure visibility with smooth scrolling
         if (sourceLines.length > 0) {
-            this.scrollToElement(sourceLines[0]);
+            this.scrollToElement(sourceLines[0], smooth);
         }
         if (targetLines.length > 0) {
-            this.scrollToElement(targetLines[0]);
+            this.scrollToElement(targetLines[0], smooth);
         }
         
         // Trigger alignment change event
@@ -212,9 +231,11 @@ class DualSubtitleDisplay {
     /**
      * Scroll element into view smoothly
      */
-    scrollToElement(element) {
+    scrollToElement(element, smooth = true) {
+        const behavior = smooth ? 'smooth' : 'auto';
+        
         element.scrollIntoView({
-            behavior: 'smooth',
+            behavior: behavior,
             block: 'center'
         });
     }
@@ -400,9 +421,9 @@ class DualSubtitleDisplay {
     /**
      * Move to next alignment
      */
-    nextAlignment() {
+    nextAlignment(smooth = false) {
         if (this.currentIndex < this.alignmentData.length - 1) {
-            this.highlightAlignment(this.currentIndex + 1);
+            this.highlightAlignment(this.currentIndex + 1, smooth);
             return true;
         }
         return false;
@@ -411,9 +432,9 @@ class DualSubtitleDisplay {
     /**
      * Move to previous alignment
      */
-    previousAlignment() {
+    previousAlignment(smooth = false) {
         if (this.currentIndex > 0) {
-            this.highlightAlignment(this.currentIndex - 1);
+            this.highlightAlignment(this.currentIndex - 1, smooth);
             return true;
         }
         return false;
@@ -431,8 +452,51 @@ class DualSubtitleDisplay {
     /**
      * Update alignment highlighting without changing current index
      */
-    syncHighlight(index) {
-        this.highlightAlignment(index);
+    syncHighlight(index, smooth = false) {
+        this.highlightAlignment(index, smooth);
+    }
+    
+    /**
+     * Update boundary condition indicators
+     */
+    updateBoundaryIndicators(index) {
+        // Remove previous boundary classes
+        const allLines = document.querySelectorAll('.subtitle-line');
+        allLines.forEach(line => {
+            line.classList.remove('boundary-start', 'boundary-end');
+        });
+        
+        // Add boundary indicators if at start or end
+        if (index === 0) {
+            const startLines = document.querySelectorAll(`[data-index="${index}"]`);
+            startLines.forEach(line => line.classList.add('boundary-start'));
+        }
+        
+        if (index === this.alignmentData.length - 1) {
+            const endLines = document.querySelectorAll(`[data-index="${index}"]`);
+            endLines.forEach(line => line.classList.add('boundary-end'));
+        }
+    }
+    
+    /**
+     * Add visual playback indicator
+     */
+    showPlaybackIndicator(show = true) {
+        const activeLines = document.querySelectorAll('.subtitle-line.active');
+        activeLines.forEach(line => {
+            if (show) {
+                if (!line.querySelector('.playback-indicator')) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'playback-indicator';
+                    line.appendChild(indicator);
+                }
+            } else {
+                const indicator = line.querySelector('.playback-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+        });
     }
     
     /**
@@ -458,5 +522,35 @@ class DualSubtitleDisplay {
         } else {
             console.warn(`Button with id ${activeId} not found`);
         }
+    }
+    
+    /**
+     * Enable rapid navigation mode for smooth scrolling
+     */
+    enableRapidNavigation() {
+        this.rapidNavigationMode = true;
+        
+        // Add CSS class to subtitle content for faster scrolling
+        const contentElements = [this.sourceColumn, this.targetColumn];
+        contentElements.forEach(element => {
+            if (element) {
+                element.parentElement.classList.add('rapid-navigation');
+            }
+        });
+    }
+    
+    /**
+     * Disable rapid navigation mode
+     */
+    disableRapidNavigation() {
+        this.rapidNavigationMode = false;
+        
+        // Remove CSS class
+        const contentElements = [this.sourceColumn, this.targetColumn];
+        contentElements.forEach(element => {
+            if (element) {
+                element.parentElement.classList.remove('rapid-navigation');
+            }
+        });
     }
 }

@@ -11,14 +11,27 @@ class SubtitlePlayer {
         this.totalAlignments = 0;
         this.batchSize = 50;
         
+        // Playback control properties
+        this.playbackState = {
+            isPlaying: false,
+            speed: 3000, // Default 3 seconds
+            timer: null,
+            startTime: null,
+            pausedAt: null
+        };
+        
         // Initialize components
         this.dualDisplay = new DualSubtitleDisplay();
         
         // UI elements
         this.progressBar = document.getElementById('progress-bar');
         this.progressText = document.getElementById('progress-text');
+        this.progressPercentage = document.getElementById('progress-percentage');
+        this.progressTime = document.getElementById('progress-time');
         this.btnPrev = document.getElementById('btn-prev');
         this.btnNext = document.getElementById('btn-next');
+        this.btnPlayPause = document.getElementById('btn-play-pause');
+        this.speedSelector = document.getElementById('speed-selector');
         this.loadingContainer = document.getElementById('loading-container');
         this.errorContainer = document.getElementById('error-container');
         this.errorMessage = document.getElementById('error-message');
@@ -47,6 +60,17 @@ class SubtitlePlayer {
             this.btnNext.addEventListener('click', () => this.nextAlignment());
         }
         
+        // Playback control listeners
+        if (this.btnPlayPause) {
+            this.btnPlayPause.addEventListener('click', () => this.togglePlayback());
+        }
+        
+        if (this.speedSelector) {
+            this.speedSelector.addEventListener('change', (e) => {
+                this.setPlaybackSpeed(parseInt(e.target.value));
+            });
+        }
+        
         // Progress tracking - update every 5 alignments or 30 seconds
         this.progressUpdateCounter = 0;
         this.lastProgressUpdate = Date.now();
@@ -55,6 +79,18 @@ class SubtitlePlayer {
         setInterval(() => {
             this.autoSaveProgress();
         }, 30000); // 30 seconds
+        
+        // Handle browser visibility changes to pause auto-play
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && this.playbackState.isPlaying) {
+                this.pauseAutoPlay();
+            }
+        });
+        
+        // Handle beforeunload to save state
+        window.addEventListener('beforeunload', () => {
+            this.savePlaybackState();
+        });
     }
     
     /**
@@ -75,6 +111,10 @@ class SubtitlePlayer {
             
             // Set up the display
             this.updateDisplay();
+            
+            // Restore playback state
+            this.restorePlaybackState();
+            
             this.showLoading(false);
             
         } catch (error) {
@@ -182,7 +222,7 @@ class SubtitlePlayer {
         
         // Update current index to be relative to loaded data
         const relativeIndex = Math.max(0, this.currentIndex - (this.alignmentData[0]?.index || 0));
-        this.dualDisplay.highlightAlignment(relativeIndex);
+        this.dualDisplay.highlightAlignment(relativeIndex, this.playbackState.isPlaying);
         
         // Update progress display
         this.updateProgressDisplay();
@@ -192,7 +232,7 @@ class SubtitlePlayer {
     }
     
     /**
-     * Update progress bar and text
+     * Update progress bar and text with enhanced details
      */
     updateProgressDisplay() {
         if (this.progressBar && this.progressText) {
@@ -200,19 +240,90 @@ class SubtitlePlayer {
             this.progressBar.style.width = `${progress}%`;
             this.progressBar.setAttribute('aria-valuenow', progress);
             this.progressText.textContent = `${this.currentIndex + 1} / ${this.totalAlignments}`;
+            
+            // Update percentage display
+            if (this.progressPercentage) {
+                this.progressPercentage.textContent = `${Math.round(progress)}%`;
+            }
+            
+            // Update estimated time remaining
+            if (this.progressTime) {
+                this.updateTimeEstimate();
+            }
         }
     }
     
     /**
-     * Update navigation button states
+     * Update estimated time remaining
+     */
+    updateTimeEstimate() {
+        if (!this.progressTime || !this.playbackState.isPlaying) {
+            if (this.progressTime) {
+                this.progressTime.textContent = 'Estimated time: --';
+            }
+            return;
+        }
+        
+        const remainingAlignments = this.totalAlignments - this.currentIndex - 1;
+        const estimatedSeconds = Math.ceil((remainingAlignments * this.playbackState.speed) / 1000);
+        
+        if (estimatedSeconds <= 0) {
+            this.progressTime.textContent = 'Complete!';
+            return;
+        }
+        
+        const minutes = Math.floor(estimatedSeconds / 60);
+        const seconds = estimatedSeconds % 60;
+        
+        if (minutes > 0) {
+            this.progressTime.textContent = `Estimated time: ${minutes}m ${seconds}s`;
+        } else {
+            this.progressTime.textContent = `Estimated time: ${seconds}s`;
+        }
+    }
+    
+    /**
+     * Update navigation button states with boundary indicators
      */
     updateNavigationButtons() {
+        const atStart = this.currentIndex <= 0;
+        const atEnd = this.currentIndex >= this.totalAlignments - 1;
+        
         if (this.btnPrev) {
-            this.btnPrev.disabled = this.currentIndex <= 0;
+            this.btnPrev.disabled = atStart;
+            if (atStart) {
+                this.btnPrev.classList.add('at-boundary');
+            } else {
+                this.btnPrev.classList.remove('at-boundary');
+            }
         }
         
         if (this.btnNext) {
-            this.btnNext.disabled = this.currentIndex >= this.totalAlignments - 1;
+            this.btnNext.disabled = atEnd;
+            if (atEnd) {
+                this.btnNext.classList.add('at-boundary');
+            } else {
+                this.btnNext.classList.remove('at-boundary');
+            }
+        }
+        
+        // Update first/last buttons if they exist
+        const btnFirst = document.getElementById('btn-first');
+        const btnLast = document.getElementById('btn-last');
+        
+        if (btnFirst) {
+            btnFirst.disabled = atStart;
+            btnFirst.classList.toggle('at-boundary', atStart);
+        }
+        
+        if (btnLast) {
+            btnLast.disabled = atEnd;
+            btnLast.classList.toggle('at-boundary', atEnd);
+        }
+        
+        // Auto-pause if at end during playback
+        if (atEnd && this.playbackState.isPlaying) {
+            this.pauseAutoPlay();
         }
     }
     
@@ -232,7 +343,7 @@ class SubtitlePlayer {
             this.updateDisplay();
         } else {
             const relativeIndex = this.currentIndex - firstLoadedIndex;
-            this.dualDisplay.highlightAlignment(relativeIndex);
+            this.dualDisplay.highlightAlignment(relativeIndex, false);
             this.updateProgressDisplay();
             this.updateNavigationButtons();
         }
@@ -256,7 +367,7 @@ class SubtitlePlayer {
         } else {
             const firstLoadedIndex = this.alignmentData[0]?.index || 0;
             const relativeIndex = this.currentIndex - firstLoadedIndex;
-            this.dualDisplay.highlightAlignment(relativeIndex);
+            this.dualDisplay.highlightAlignment(relativeIndex, this.playbackState.isPlaying);
             this.updateProgressDisplay();
             this.updateNavigationButtons();
         }
@@ -335,7 +446,7 @@ class SubtitlePlayer {
             this.updateDisplay();
         } else {
             const relativeIndex = index - firstLoaded;
-            this.dualDisplay.highlightAlignment(relativeIndex);
+            this.dualDisplay.highlightAlignment(relativeIndex, false);
             this.updateProgressDisplay();
             this.updateNavigationButtons();
         }
@@ -405,11 +516,236 @@ class SubtitlePlayer {
     }
     
     /**
+     * Toggle playback state between playing and paused
+     */
+    togglePlayback() {
+        if (this.playbackState.isPlaying) {
+            this.pauseAutoPlay();
+        } else {
+            this.startAutoPlay();
+        }
+    }
+    
+    /**
+     * Start automatic playback progression
+     */
+    startAutoPlay() {
+        if (this.playbackState.isPlaying) {
+            return; // Already playing
+        }
+        
+        // Can't start if at the end
+        if (this.currentIndex >= this.totalAlignments - 1) {
+            return;
+        }
+        
+        this.playbackState.isPlaying = true;
+        this.playbackState.startTime = Date.now();
+        this.playbackState.pausedAt = null;
+        
+        // Update UI
+        this.updatePlaybackUI();
+        
+        // Start the timer
+        this.playbackState.timer = setInterval(() => {
+            this.autoAdvance();
+        }, this.playbackState.speed);
+        
+        // Save state
+        this.savePlaybackState();
+    }
+    
+    /**
+     * Pause automatic playback progression
+     */
+    pauseAutoPlay() {
+        if (!this.playbackState.isPlaying) {
+            return; // Already paused
+        }
+        
+        this.playbackState.isPlaying = false;
+        this.playbackState.pausedAt = this.currentIndex;
+        
+        // Clear timer
+        if (this.playbackState.timer) {
+            clearInterval(this.playbackState.timer);
+            this.playbackState.timer = null;
+        }
+        
+        // Update UI
+        this.updatePlaybackUI();
+        
+        // Save state
+        this.savePlaybackState();
+    }
+    
+    /**
+     * Set playback speed in milliseconds
+     */
+    setPlaybackSpeed(speed) {
+        // Validate speed (1-5 seconds)
+        const validSpeed = Math.max(1000, Math.min(5000, speed));
+        this.playbackState.speed = validSpeed;
+        
+        // Update UI
+        if (this.speedSelector) {
+            this.speedSelector.value = validSpeed;
+        }
+        
+        // Restart timer if currently playing
+        if (this.playbackState.isPlaying) {
+            clearInterval(this.playbackState.timer);
+            this.playbackState.timer = setInterval(() => {
+                this.autoAdvance();
+            }, this.playbackState.speed);
+        }
+        
+        // Save state
+        this.savePlaybackState();
+    }
+    
+    /**
+     * Automatically advance to next alignment
+     */
+    async autoAdvance() {
+        if (this.currentIndex >= this.totalAlignments - 1) {
+            // Reached the end, pause playback
+            this.pauseAutoPlay();
+            return;
+        }
+        
+        // Move to next alignment
+        await this.nextAlignment();
+    }
+    
+    /**
+     * Update playback control UI elements
+     */
+    updatePlaybackUI() {
+        if (this.btnPlayPause) {
+            const icon = this.btnPlayPause.querySelector('i');
+            const text = this.btnPlayPause.querySelector('.btn-text');
+            
+            if (this.playbackState.isPlaying) {
+                if (icon) icon.className = 'fas fa-pause';
+                if (text) text.textContent = 'Pause';
+                this.btnPlayPause.classList.remove('btn-success');
+                this.btnPlayPause.classList.add('btn-warning');
+                
+                // Show playback indicator on current alignment
+                this.dualDisplay.showPlaybackIndicator(true);
+            } else {
+                if (icon) icon.className = 'fas fa-play';
+                if (text) text.textContent = 'Play';
+                this.btnPlayPause.classList.remove('btn-warning');
+                this.btnPlayPause.classList.add('btn-success');
+                
+                // Hide playback indicator
+                this.dualDisplay.showPlaybackIndicator(false);
+            }
+        }
+        
+        // Update progress time estimate
+        this.updateTimeEstimate();
+        
+        // Update navigation button states to show boundary conditions
+        this.updateNavigationButtons();
+    }
+    
+    /**
+     * Save playback state to localStorage
+     */
+    savePlaybackState() {
+        if (typeof storageHelper !== 'undefined') {
+            const sessionData = {
+                currentIndex: this.currentIndex,
+                isPlaying: this.playbackState.isPlaying,
+                playbackSpeed: this.playbackState.speed,
+                lastUpdated: Date.now()
+            };
+            
+            storageHelper.savePlaybackSession(this.subLinkId, sessionData);
+            
+            // Also save preferences
+            const preferences = {
+                isAutoPlaying: this.playbackState.isPlaying,
+                playbackSpeed: this.playbackState.speed,
+                lastPlaybackState: this.playbackState.isPlaying ? 'playing' : 'paused',
+                preferredSpeed: storageHelper.getPreferenceFromSpeed(this.playbackState.speed)
+            };
+            
+            storageHelper.savePlaybackPreferences(preferences);
+        }
+    }
+    
+    /**
+     * Restore playback state from localStorage
+     */
+    restorePlaybackState() {
+        if (typeof storageHelper === 'undefined') {
+            return;
+        }
+        
+        // Load session data
+        const sessionData = storageHelper.loadPlaybackSession(this.subLinkId);
+        if (sessionData && sessionData.lastUpdated) {
+            // Only restore if session is recent (within 24 hours)
+            const timeDiff = Date.now() - sessionData.lastUpdated;
+            if (timeDiff < 24 * 60 * 60 * 1000) {
+                this.playbackState.speed = sessionData.playbackSpeed || 3000;
+                
+                // Update speed selector
+                if (this.speedSelector) {
+                    this.speedSelector.value = this.playbackState.speed;
+                }
+            }
+        }
+        
+        // Load general preferences
+        const preferences = storageHelper.loadPlaybackPreferences();
+        if (preferences) {
+            this.playbackState.speed = preferences.playbackSpeed || 3000;
+            
+            // Update UI
+            if (this.speedSelector) {
+                this.speedSelector.value = this.playbackState.speed;
+            }
+        }
+        
+        // Update UI state
+        this.updatePlaybackUI();
+    }
+    
+    /**
+     * Jump to beginning of subtitle file
+     */
+    async jumpToBeginning() {
+        if (this.playbackState.isPlaying) {
+            this.pauseAutoPlay();
+        }
+        await this.jumpToAlignment(0);
+    }
+    
+    /**
+     * Jump to end of subtitle file
+     */
+    async jumpToEnd() {
+        if (this.playbackState.isPlaying) {
+            this.pauseAutoPlay();
+        }
+        await this.jumpToAlignment(this.totalAlignments - 1);
+    }
+    
+    /**
      * Clean up resources
      */
     destroy() {
-        // Save final progress
+        // Pause playback and clear timers
+        this.pauseAutoPlay();
+        
+        // Save final progress and state
         this.saveProgress();
+        this.savePlaybackState();
         
         // Clean up event listeners if needed
         // This would be called when navigating away from the page

@@ -43,30 +43,65 @@
         </div>
     </div>
 
-    <!-- Progress Indicator -->
+    <!-- Enhanced Progress Indicator -->
     <div class="row mb-3">
         <div class="col-12">
-            <div class="progress">
-                <div class="progress-bar" role="progressbar" style="width: 0%" 
-                     aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progress-bar">
-                    <span id="progress-text">0 / 0</span>
+            <div class="progress-container">
+                <div class="progress clickable-progress" role="button" tabindex="0" aria-label="Click to navigate">
+                    <div class="progress-bar" role="progressbar" style="width: 0%" 
+                         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progress-bar">
+                        <span id="progress-text">0 / 0</span>
+                    </div>
+                </div>
+                <div class="progress-details d-flex justify-content-between mt-1">
+                    <small class="text-muted" id="progress-percentage">0%</small>
+                    <small class="text-muted" id="progress-time">Estimated time: --</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Navigation Controls -->
+    <!-- Playback Controls -->
     <div class="row mb-3">
         <div class="col-12">
-            <div class="d-flex justify-content-center">
-                <div class="btn-group" role="group" aria-label="Navigation controls">
+            <div class="d-flex justify-content-center align-items-center flex-wrap">
+                <!-- Auto-play Controls -->
+                <div class="btn-group me-3 mb-2" role="group" aria-label="Playback controls">
+                    <button type="button" class="btn btn-success" id="btn-play-pause">
+                        <i class="fas fa-play"></i> <span class="btn-text">Play</span>
+                    </button>
+                </div>
+                
+                <!-- Speed Selection -->
+                <div class="me-3 mb-2">
+                    <label for="speed-selector" class="form-label mb-0 me-2">Speed:</label>
+                    <select class="form-select form-select-sm" id="speed-selector" style="width: auto; display: inline-block;">
+                        <option value="1000">Fast (1s)</option>
+                        <option value="3000" selected>Normal (3s)</option>
+                        <option value="5000">Slow (5s)</option>
+                    </select>
+                </div>
+                
+                <!-- Manual Navigation Controls -->
+                <div class="btn-group me-3 mb-2" role="group" aria-label="Manual navigation">
+                    <button type="button" class="btn btn-outline-secondary" id="btn-first">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
                     <button type="button" class="btn btn-primary" id="btn-prev" disabled>
                         <i class="fas fa-chevron-left"></i> Previous
                     </button>
                     <button type="button" class="btn btn-primary" id="btn-next" disabled>
                         Next <i class="fas fa-chevron-right"></i>
                     </button>
+                    <button type="button" class="btn btn-outline-secondary" id="btn-last">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
                 </div>
+                
+                <!-- Keyboard Shortcuts Help -->
+                <button type="button" class="btn btn-outline-info btn-sm mb-2" id="btn-shortcuts" title="Keyboard Shortcuts">
+                    <i class="fas fa-keyboard"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -133,6 +168,7 @@
 
 {% block scripts %}
 <link href="{{ url_for('static', filename='css/learning.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/utils/storage-helper.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/dual-subtitle-display.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modules/subtitle-player.js') }}"></script>
 <script>
@@ -143,8 +179,42 @@
         // Initialize subtitle player
         const subtitlePlayer = new SubtitlePlayer(learningData.subLinkId, 0);
         
-        // Set up keyboard shortcuts
+        // Set up additional UI event listeners
+        const btnFirst = document.getElementById('btn-first');
+        const btnLast = document.getElementById('btn-last');
+        const progressContainer = document.querySelector('.clickable-progress');
+        const btnShortcuts = document.getElementById('btn-shortcuts');
+        
+        if (btnFirst) {
+            btnFirst.addEventListener('click', () => subtitlePlayer.jumpToBeginning());
+        }
+        
+        if (btnLast) {
+            btnLast.addEventListener('click', () => subtitlePlayer.jumpToEnd());
+        }
+        
+        // Clickable progress bar
+        if (progressContainer) {
+            progressContainer.addEventListener('click', function(event) {
+                const rect = this.getBoundingClientRect();
+                const clickPosition = (event.clientX - rect.left) / rect.width;
+                const targetIndex = Math.floor(clickPosition * subtitlePlayer.getTotalAlignments());
+                subtitlePlayer.jumpToAlignment(targetIndex);
+            });
+        }
+        
+        // Keyboard shortcuts help
+        if (btnShortcuts) {
+            btnShortcuts.addEventListener('click', showKeyboardShortcuts);
+        }
+        
+        // Enhanced keyboard shortcuts
         document.addEventListener('keydown', function(event) {
+            // Prevent shortcuts when user is typing in input fields
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') {
+                return;
+            }
+            
             switch(event.key) {
                 case 'ArrowLeft':
                     event.preventDefault();
@@ -154,8 +224,101 @@
                     event.preventDefault();
                     subtitlePlayer.nextAlignment();
                     break;
+                case ' ': // Spacebar
+                    event.preventDefault();
+                    subtitlePlayer.togglePlayback();
+                    break;
+                case 'Home':
+                    event.preventDefault();
+                    subtitlePlayer.jumpToBeginning();
+                    break;
+                case 'End':
+                    event.preventDefault();
+                    subtitlePlayer.jumpToEnd();
+                    break;
+                case '1':
+                    event.preventDefault();
+                    subtitlePlayer.setPlaybackSpeed(5000); // Slow
+                    break;
+                case '2':
+                    event.preventDefault();
+                    subtitlePlayer.setPlaybackSpeed(3000); // Normal
+                    break;
+                case '3':
+                    event.preventDefault();
+                    subtitlePlayer.setPlaybackSpeed(1000); // Fast
+                    break;
+                case 'Escape':
+                    event.preventDefault();
+                    if (subtitlePlayer.playbackState.isPlaying) {
+                        subtitlePlayer.pauseAutoPlay();
+                    }
+                    break;
+                case '?':
+                    event.preventDefault();
+                    showKeyboardShortcuts();
+                    break;
             }
         });
+        
+        // Keyboard shortcuts help modal
+        function showKeyboardShortcuts() {
+            const modalHtml = `
+                <div class="modal fade" id="shortcutsModal" tabindex="-1" aria-labelledby="shortcutsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="shortcutsModalLabel">Keyboard Shortcuts</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Navigation</h6>
+                                        <ul class="list-unstyled">
+                                            <li><kbd>←</kbd> Previous alignment</li>
+                                            <li><kbd>→</kbd> Next alignment</li>
+                                            <li><kbd>Home</kbd> Jump to beginning</li>
+                                            <li><kbd>End</kbd> Jump to end</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Playback</h6>
+                                        <ul class="list-unstyled">
+                                            <li><kbd>Space</kbd> Play/Pause</li>
+                                            <li><kbd>1</kbd> Slow speed (5s)</li>
+                                            <li><kbd>2</kbd> Normal speed (3s)</li>
+                                            <li><kbd>3</kbd> Fast speed (1s)</li>
+                                            <li><kbd>Esc</kbd> Pause playback</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <hr>
+                                <small class="text-muted">Press <kbd>?</kbd> anytime to show this help</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if present
+            const existingModal = document.getElementById('shortcutsModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('shortcutsModal'));
+            modal.show();
+            
+            // Clean up modal after it's hidden
+            document.getElementById('shortcutsModal').addEventListener('hidden.bs.modal', function() {
+                this.remove();
+            });
+        }
     });
 </script>
 {% endblock %}
