@@ -1,6 +1,6 @@
 """Tests for progress service business logic."""
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from app import create_app, db
 from app.models.user import User
 from app.models.language import Language
@@ -363,7 +363,7 @@ class TestProgressService:
                     current_alignment_index=i + 1,
                     total_alignments_completed=i + 1,
                     session_duration_minutes=(i + 1) * 5,
-                    last_accessed=datetime.utcnow() - timedelta(days=i)
+                    last_accessed=datetime.now(UTC) - timedelta(days=i)
                 )
                 progress_records.append(progress)
             
@@ -437,7 +437,7 @@ class TestProgressService:
                     current_alignment_index=i,
                     total_alignments_completed=i,
                     session_duration_minutes=i * 2,
-                    last_accessed=datetime.utcnow() - timedelta(hours=i)
+                    last_accessed=datetime.now(UTC) - timedelta(hours=i)
                 )
                 progress_records.append(progress)
             

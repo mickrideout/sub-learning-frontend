@@ -30,7 +30,7 @@ class ProgressService:
         """
         try:
             # Validate user owns this progress or sub_link exists
-            sub_link = SubLink.query.get(sub_link_id)
+            sub_link = db.session.get(SubLink, sub_link_id)
             if not sub_link:
                 raise ProgressServiceError(f"Subtitle link {sub_link_id} not found")
             
@@ -90,7 +90,7 @@ class ProgressService:
                 raise ProgressServiceError("Session duration cannot be negative")
                 
             # Validate sub_link exists and get total alignments
-            sub_link = SubLink.query.get(sub_link_id)
+            sub_link = db.session.get(SubLink, sub_link_id)
             if not sub_link:
                 raise ProgressServiceError(f"Subtitle link {sub_link_id} not found")
                 
