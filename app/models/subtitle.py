@@ -79,3 +79,56 @@ class SubLink(db.Model):
     
     def __repr__(self):
         return f'<SubLink {self.id}: {self.fromid}({self.fromlang}) -> {self.toid}({self.tolang})>'
+
+
+class SubLinkLine(db.Model):
+    """Alignment data model linking subtitle lines between languages."""
+    
+    __tablename__ = 'sub_link_lines'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    sub_link_id = db.Column(db.Integer, db.ForeignKey('sub_links.id'), nullable=False)
+    link_data = db.Column(db.JSON, nullable=False)  # Array of aligned line pairs [[source_line_ids], [target_line_ids]]
+    
+    # Relationship
+    sub_link = db.relationship('SubLink', backref='alignment_data')
+    
+    def to_dict(self):
+        """Convert SubLinkLine to dictionary for JSON serialization."""
+        return {
+            'id': self.id,
+            'sub_link_id': self.sub_link_id,
+            'link_data': self.link_data
+        }
+    
+    def __repr__(self):
+        return f'<SubLinkLine {self.id}: SubLink {self.sub_link_id}>'
+
+
+class UserProgress(db.Model):
+    """User progress tracking model for subtitle learning sessions."""
+    
+    __tablename__ = 'user_progress'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    sub_link_id = db.Column(db.Integer, db.ForeignKey('sub_links.id'), nullable=False)
+    current_alignment_index = db.Column(db.Integer, default=0, nullable=False)
+    last_accessed = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='progress_sessions')
+    sub_link = db.relationship('SubLink', backref='user_sessions')
+    
+    def to_dict(self):
+        """Convert UserProgress to dictionary for JSON serialization."""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'sub_link_id': self.sub_link_id,
+            'current_alignment_index': self.current_alignment_index,
+            'last_accessed': self.last_accessed.isoformat() if self.last_accessed else None
+        }
+    
+    def __repr__(self):
+        return f'<UserProgress {self.id}: User {self.user_id}, SubLink {self.sub_link_id}>'

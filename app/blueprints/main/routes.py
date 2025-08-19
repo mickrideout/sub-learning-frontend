@@ -2,12 +2,13 @@
 import os
 import sys
 from datetime import datetime, UTC
-from flask import jsonify, render_template, redirect, url_for
-from flask_login import current_user
+from flask import jsonify, render_template, redirect, url_for, abort
+from flask_login import current_user, login_required
 from sqlalchemy import text
 
 from app.blueprints.main import main_bp
 from app import db
+from app.models.subtitle import SubLink
 
 
 def get_database_status():
@@ -117,3 +118,39 @@ def movies():
     if not current_user.is_authenticated:
         return redirect(url_for('auth.login'))
     return render_template('main/movies.html')
+
+
+def verify_sub_link_access(user_id, sub_link_id):
+    """Verify user has access to the specific language pair."""
+    sub_link = SubLink.query.get(sub_link_id)
+    if not sub_link:
+        return False
+    
+    # Access control based on user's language preferences
+    user = current_user
+    if not user.native_language_id or not user.target_language_id:
+        return False
+    
+    # Check if the sub_link matches user's language preferences
+    valid_language_pair = (
+        (sub_link.fromlang == user.native_language_id and sub_link.tolang == user.target_language_id) or
+        (sub_link.fromlang == user.target_language_id and sub_link.tolang == user.native_language_id)
+    )
+    
+    return valid_language_pair
+
+
+@main_bp.route('/learning/<int:sub_link_id>', methods=['GET'])
+@login_required
+def learning(sub_link_id):
+    """Main learning interface for dual-language subtitle reading."""
+    
+    # Validate sub_link_id exists and user has access
+    if not verify_sub_link_access(current_user.id, sub_link_id):
+        abort(404)  # Use 404 instead of 403 to not reveal existence
+    
+    sub_link = SubLink.query.get_or_404(sub_link_id)
+    
+    return render_template('main/learning.html', 
+                         sub_link=sub_link,
+                         sub_link_id=sub_link_id)
