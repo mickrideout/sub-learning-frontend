@@ -1,5 +1,6 @@
 """Learning goal model for user goal tracking and motivation."""
 from datetime import datetime, date
+import datetime as dt
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from app import db
@@ -45,7 +46,7 @@ class LearningGoal(db.Model):
         self.deadline = deadline
         self.current_value = 0
         self.is_active = True
-        self.created_at = datetime.utcnow()
+        self.created_at = datetime.now(dt.timezone.utc)
         
     def to_dict(self):
         """
@@ -83,7 +84,7 @@ class LearningGoal(db.Model):
         
         # Check if goal is completed
         if self.current_value >= self.target_value and not self.completed_at:
-            self.completed_at = datetime.utcnow()
+            self.completed_at = datetime.now(dt.timezone.utc)
             
     def increment_progress(self, amount=1):
         """
