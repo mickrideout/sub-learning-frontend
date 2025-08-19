@@ -1,6 +1,6 @@
 # Epic 2: Language & Content Management System
 
-**Epic Goal:** Implement language selection interface, movie catalog with search and alphabetical browsing capabilities, and subtitle file retrieval system, enabling users to discover and select learning content from pre-populated language and movie databases.
+**Epic Goal:** Implement language selection interface, movie catalog with search and alphabetical browsing capabilities, and subtitle database retrieval system, enabling users to discover and select learning content from pre-populated language and movie databases.
 
 ## Story 2.1: Language Selection Interface
 
@@ -64,18 +64,18 @@ so that I can explore available content systematically.
 7. "All" option to display complete movie catalog for user's language pair
 8. Smooth scrolling and responsive behavior on different screen sizes
 
-## Story 2.5: Subtitle File Retrieval System
+## Story 2.5: Subtitle Database Retrieval System
 
 As a system administrator,
-I want subtitle files efficiently retrieved from pre-populated storage,
+I want subtitle content efficiently retrieved from the SubLine database model,
 so that users can access synchronized subtitle content for their selected movies.
 
 ### Acceptance Criteria
 1. Subtitle retrieval API endpoint accepting movie ID and language parameters
-2. Subtitle file parsing capability for common formats from existing file storage
+2. Database queries to retrieve SubLine records with content and line sequence data
 3. Subtitle content cached in memory for performance optimization
-4. Error handling for missing or corrupted subtitle files with user-friendly messages
-5. API response includes subtitle lines with timing and text content in JSON format
-6. Subtitle file validation ensuring proper formatting during retrieval
-7. Database references to subtitle files validated during movie catalog display
-8. Performance optimization for concurrent subtitle file access
+4. Error handling for missing subtitle data with user-friendly messages
+5. API response includes subtitle lines with sequence and text content in JSON format
+6. Database query optimization for efficient SubLine content retrieval
+7. SubLine data validation ensuring content integrity during movie catalog display
+8. Performance optimization for concurrent database access to SubLine records

@@ -12,7 +12,7 @@
 
 **FR5:** The system shall track and persist user learning progress including lines completed, time spent, movies viewed, and session history across login sessions.
 
-**FR6:** The system shall provide subtitle file storage and retrieval capabilities supporting efficient search and streaming of subtitle content for selected movies.
+**FR6:** The system shall provide subtitle database retrieval capabilities supporting efficient search and streaming of subtitle content for selected movies from the SubLine data model.
 
 **FR8:** The system shall allow users to bookmark specific subtitle lines or scenes for later review and practice.
 
