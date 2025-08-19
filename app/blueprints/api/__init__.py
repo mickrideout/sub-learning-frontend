@@ -7,3 +7,4 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 from app.blueprints.api import routes  # noqa: F401
 from app.blueprints.api import movies  # noqa: F401
 from app.blueprints.api import subtitles  # noqa: F401
+from app.blueprints.api import progress  # noqa: F401

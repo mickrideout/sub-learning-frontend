@@ -114,11 +114,17 @@ class UserProgress(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     sub_link_id = db.Column(db.Integer, db.ForeignKey('sub_links.id'), nullable=False)
     current_alignment_index = db.Column(db.Integer, default=0, nullable=False)
+    total_alignments_completed = db.Column(db.Integer, default=0, nullable=False)
+    session_duration_minutes = db.Column(db.Integer, default=0, nullable=False)
     last_accessed = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)
     
     # Relationships
     user = db.relationship('User', backref='progress_sessions')
     sub_link = db.relationship('SubLink', backref='user_sessions')
+    
+    # Unique constraint to ensure one progress record per user per sub_link
+    __table_args__ = (db.UniqueConstraint('user_id', 'sub_link_id'),)
     
     def to_dict(self):
         """Convert UserProgress to dictionary for JSON serialization."""
@@ -127,7 +133,10 @@ class UserProgress(db.Model):
             'user_id': self.user_id,
             'sub_link_id': self.sub_link_id,
             'current_alignment_index': self.current_alignment_index,
-            'last_accessed': self.last_accessed.isoformat() if self.last_accessed else None
+            'total_alignments_completed': self.total_alignments_completed,
+            'session_duration_minutes': self.session_duration_minutes,
+            'last_accessed': self.last_accessed.isoformat() if self.last_accessed else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
     
     def __repr__(self):

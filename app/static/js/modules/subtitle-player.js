@@ -23,6 +23,12 @@ class SubtitlePlayer {
         // Initialize components
         this.dualDisplay = new DualSubtitleDisplay();
         
+        // Initialize progress tracking (will be imported in template)
+        this.progressTracker = null;
+        if (typeof progressTracker !== 'undefined') {
+            this.progressTracker = progressTracker;
+        }
+        
         // UI elements
         this.progressBar = document.getElementById('progress-bar');
         this.progressText = document.getElementById('progress-text');
@@ -100,10 +106,18 @@ class SubtitlePlayer {
         try {
             this.showLoading(true);
             
-            // Load user progress first
-            const progress = await this.loadUserProgress();
-            if (progress && progress.current_alignment_index) {
-                this.currentIndex = progress.current_alignment_index;
+            // Start progress tracking session
+            if (this.progressTracker) {
+                const restoredProgress = await this.progressTracker.startSession(this.subLinkId);
+                if (restoredProgress && restoredProgress.current_alignment_index) {
+                    this.currentIndex = restoredProgress.current_alignment_index;
+                }
+            } else {
+                // Fallback to legacy progress loading
+                const progress = await this.loadUserProgress();
+                if (progress && progress.current_alignment_index) {
+                    this.currentIndex = progress.current_alignment_index;
+                }
             }
             
             // Load initial batch of alignment data
@@ -383,10 +397,15 @@ class SubtitlePlayer {
         this.updateProgressDisplay();
         this.updateNavigationButtons();
         
-        // Track progress updates
-        this.progressUpdateCounter++;
-        if (this.progressUpdateCounter >= 5 || Date.now() - this.lastProgressUpdate > 30000) {
-            this.saveProgress();
+        // Update progress tracker with new position
+        if (this.progressTracker) {
+            this.progressTracker.updateProgress(index);
+        } else {
+            // Fallback to legacy progress tracking
+            this.progressUpdateCounter++;
+            if (this.progressUpdateCounter >= 5 || Date.now() - this.lastProgressUpdate > 30000) {
+                this.saveProgress();
+            }
         }
     }
     
@@ -756,8 +775,14 @@ class SubtitlePlayer {
         // Pause playback and clear timers
         this.pauseAutoPlay();
         
-        // Save final progress and state
-        this.saveProgress();
+        // End progress tracking session
+        if (this.progressTracker) {
+            this.progressTracker.endSession();
+        } else {
+            // Fallback to legacy progress saving
+            this.saveProgress();
+        }
+        
         this.savePlaybackState();
         
         // Clean up event listeners if needed

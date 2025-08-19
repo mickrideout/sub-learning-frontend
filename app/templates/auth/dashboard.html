@@ -38,10 +38,26 @@
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title">Learning Progress</h5>
-                <p class="card-text">Your language learning journey starts here!</p>
-                <p class="card-text">
-                    <small class="text-muted">Feature coming soon in future updates</small>
-                </p>
+                <div id="overall-progress-stats">
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 0%" id="overall-progress-bar"></div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Total Progress</span>
+                        <span id="overall-progress-text">0%</span>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col">
+                            <h6 class="mb-1" id="movies-studied">0</h6>
+                            <small class="text-muted">Movies Studied</small>
+                        </div>
+                        <div class="col">
+                            <h6 class="mb-1" id="total-minutes">0</h6>
+                            <small class="text-muted">Minutes Learned</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -65,15 +81,297 @@
 
 <div class="row">
     <div class="col-12">
-        <div class="card">
+        <div class="card mb-4">
             <div class="card-body">
-                <h5 class="card-title">Recent Activity</h5>
-                <p class="card-text">No recent activity to display.</p>
-                <p class="card-text">
-                    <small class="text-muted">Activity tracking will be available in future updates</small>
-                </p>
+                <h5 class="card-title d-flex justify-content-between align-items-center">
+                    Recently Studied Movies
+                    <button class="btn btn-outline-secondary btn-sm" id="refresh-recent" title="Refresh recent progress">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </h5>
+                <div id="recent-progress-container">
+                    <div class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status" id="recent-progress-loader">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Loading recent progress...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Learning Analytics</h5>
+                <div id="learning-analytics">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <h4 class="text-primary mb-1" id="total-alignments-completed">0</h4>
+                            <small class="text-muted">Alignments Completed</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <h4 class="text-success mb-1" id="current-streak">0</h4>
+                            <small class="text-muted">Day Streak</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <h4 class="text-info mb-1" id="avg-session-time">0</h4>
+                            <small class="text-muted">Avg. Session (min)</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <h4 class="text-warning mb-1" id="completion-rate">0%</h4>
+                            <small class="text-muted">Completion Rate</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+import { StorageHelper } from '/static/js/utils/storage-helper.js';
+
+class DashboardProgress {
+    constructor() {
+        this.recentProgressData = [];
+        this.overallStats = {
+            totalMovies: 0,
+            totalMinutes: 0,
+            overallProgress: 0,
+            totalAlignments: 0,
+            completionRate: 0
+        };
+        
+        this.init();
+    }
+    
+    async init() {
+        await this.loadRecentProgress();
+        this.bindEvents();
+        console.log('Dashboard progress initialized');
+    }
+    
+    async loadRecentProgress() {
+        try {
+            const response = await fetch('/api/progress/recent?limit=10', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.recentProgressData = data.recent_progress || [];
+                this.updateRecentProgressDisplay();
+                this.calculateOverallStats();
+                this.updateOverallStatsDisplay();
+            } else if (response.status === 404 || this.recentProgressData.length === 0) {
+                this.showNoProgressMessage();
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+        } catch (error) {
+            console.error('Failed to load recent progress:', error);
+            this.showErrorMessage('Unable to load progress data');
+        } finally {
+            this.hideLoader();
+        }
+    }
+    
+    updateRecentProgressDisplay() {
+        const container = document.getElementById('recent-progress-container');
+        if (!container) return;
+        
+        if (this.recentProgressData.length === 0) {
+            this.showNoProgressMessage();
+            return;
+        }
+        
+        const html = this.recentProgressData.map(progress => {
+            const completionBadge = progress.completion_percentage >= 100 
+                ? '<span class="badge bg-success ms-2">Complete</span>'
+                : `<span class="badge bg-primary ms-2">${Math.round(progress.completion_percentage)}%</span>`;
+            
+            const lastAccessed = new Date(progress.last_accessed).toLocaleDateString();
+            
+            return `
+                <div class="border rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">Subtitle Link #${progress.sub_link_id}</h6>
+                        ${completionBadge}
+                    </div>
+                    <div class="progress mb-2" style="height: 6px;">
+                        <div class="progress-bar bg-success" 
+                             style="width: ${progress.completion_percentage}%" 
+                             role="progressbar"></div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Position: ${progress.current_alignment_index + 1} / ${progress.total_alignments}</span>
+                        <span>Last studied: ${lastAccessed}</span>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Session time: ${progress.session_duration_minutes || 0} minutes</span>
+                        <a href="/learn/${progress.sub_link_id}" class="btn btn-sm btn-outline-primary">
+                            ${progress.completion_percentage >= 100 ? 'Review' : 'Continue'}
+                        </a>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        container.innerHTML = html;
+    }
+    
+    calculateOverallStats() {
+        if (this.recentProgressData.length === 0) {
+            return;
+        }
+        
+        this.overallStats.totalMovies = this.recentProgressData.length;
+        this.overallStats.totalMinutes = this.recentProgressData.reduce(
+            (sum, progress) => sum + (progress.session_duration_minutes || 0), 0
+        );
+        
+        const totalCompletedAlignments = this.recentProgressData.reduce(
+            (sum, progress) => sum + (progress.total_alignments_completed || 0), 0
+        );
+        
+        const totalPossibleAlignments = this.recentProgressData.reduce(
+            (sum, progress) => sum + (progress.total_alignments || 0), 0
+        );
+        
+        this.overallStats.totalAlignments = totalCompletedAlignments;
+        this.overallStats.overallProgress = totalPossibleAlignments > 0 
+            ? (totalCompletedAlignments / totalPossibleAlignments) * 100 
+            : 0;
+        
+        const completedMovies = this.recentProgressData.filter(
+            progress => progress.completion_percentage >= 100
+        ).length;
+        
+        this.overallStats.completionRate = this.overallStats.totalMovies > 0 
+            ? (completedMovies / this.overallStats.totalMovies) * 100 
+            : 0;
+    }
+    
+    updateOverallStatsDisplay() {
+        const elements = {
+            overallProgressBar: document.getElementById('overall-progress-bar'),
+            overallProgressText: document.getElementById('overall-progress-text'),
+            moviesStudied: document.getElementById('movies-studied'),
+            totalMinutes: document.getElementById('total-minutes'),
+            totalAlignmentsCompleted: document.getElementById('total-alignments-completed'),
+            completionRate: document.getElementById('completion-rate'),
+            avgSessionTime: document.getElementById('avg-session-time'),
+            currentStreak: document.getElementById('current-streak')
+        };
+        
+        if (elements.overallProgressBar) {
+            elements.overallProgressBar.style.width = `${this.overallStats.overallProgress}%`;
+        }
+        
+        if (elements.overallProgressText) {
+            elements.overallProgressText.textContent = `${Math.round(this.overallStats.overallProgress)}%`;
+        }
+        
+        if (elements.moviesStudied) {
+            elements.moviesStudied.textContent = this.overallStats.totalMovies;
+        }
+        
+        if (elements.totalMinutes) {
+            elements.totalMinutes.textContent = this.overallStats.totalMinutes;
+        }
+        
+        if (elements.totalAlignmentsCompleted) {
+            elements.totalAlignmentsCompleted.textContent = this.overallStats.totalAlignments.toLocaleString();
+        }
+        
+        if (elements.completionRate) {
+            elements.completionRate.textContent = `${Math.round(this.overallStats.completionRate)}%`;
+        }
+        
+        if (elements.avgSessionTime) {
+            const avgSession = this.overallStats.totalMovies > 0 
+                ? Math.round(this.overallStats.totalMinutes / this.overallStats.totalMovies)
+                : 0;
+            elements.avgSessionTime.textContent = avgSession;
+        }
+        
+        // Placeholder for streak calculation
+        if (elements.currentStreak) {
+            elements.currentStreak.textContent = '1'; // Simplified for now
+        }
+    }
+    
+    showNoProgressMessage() {
+        const container = document.getElementById('recent-progress-container');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                <h6 class="text-muted">No Learning Progress Yet</h6>
+                <p class="text-muted mb-3">Start learning by selecting a movie and studying subtitles!</p>
+                <a href="/movies" class="btn btn-primary btn-sm">Browse Movies</a>
+            </div>
+        `;
+    }
+    
+    showErrorMessage(message) {
+        const container = document.getElementById('recent-progress-container');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                <p class="text-muted">${message}</p>
+                <button class="btn btn-outline-primary btn-sm" onclick="window.location.reload()">
+                    Try Again
+                </button>
+            </div>
+        `;
+    }
+    
+    hideLoader() {
+        const loader = document.getElementById('recent-progress-loader');
+        if (loader && loader.parentElement) {
+            loader.parentElement.style.display = 'none';
+        }
+    }
+    
+    bindEvents() {
+        const refreshBtn = document.getElementById('refresh-recent');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async () => {
+                refreshBtn.disabled = true;
+                const icon = refreshBtn.querySelector('i');
+                if (icon) {
+                    icon.classList.add('fa-spin');
+                }
+                
+                await this.loadRecentProgress();
+                
+                refreshBtn.disabled = false;
+                if (icon) {
+                    icon.classList.remove('fa-spin');
+                }
+            });
+        }
+    }
+}
+
+// Initialize dashboard progress when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new DashboardProgress();
+});
+</script>
 {% endblock %}
