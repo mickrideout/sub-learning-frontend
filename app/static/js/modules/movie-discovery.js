@@ -10,6 +10,8 @@ class MovieDiscovery {
         this.isLoading = false;
         this.searchQuery = '';
         this.searchTimeout = null;
+        this.letterFilter = '';
+        this.letterCounts = {};
         
         // DOM elements
         this.loadingIndicator = null;
@@ -29,6 +31,15 @@ class MovieDiscovery {
         this.searchResultCount = null;
         this.searchQueryDisplay = null;
         this.clearSearchFromNoResults = null;
+        
+        // Letter navigation elements
+        this.letterNavigation = null;
+        this.mobileLetterNavigation = null;
+        this.letterCountsInfo = null;
+        this.lettersWithMoviesCount = null;
+        this.letterFilterInfo = null;
+        this.activeLetterDisplay = null;
+        this.clearLetterFilter = null;
     }
 
     /**
@@ -37,7 +48,9 @@ class MovieDiscovery {
     init() {
         this.bindElements();
         this.setupEventListeners();
-        this.initializeSearchFromURL();
+        this.initializeFromURL();
+        this.initializeLetterNavigation();
+        this.loadLetterCounts();
         this.loadMovies();
     }
 
@@ -61,6 +74,15 @@ class MovieDiscovery {
         this.searchResultCount = document.getElementById('search-result-count');
         this.searchQueryDisplay = document.getElementById('search-query-display');
         this.clearSearchFromNoResults = document.getElementById('clear-search-from-no-results');
+        
+        // Letter navigation elements
+        this.letterNavigation = document.getElementById('letter-navigation');
+        this.mobileLetterNavigation = document.getElementById('mobile-letter-navigation');
+        this.letterCountsInfo = document.getElementById('letter-counts-info');
+        this.lettersWithMoviesCount = document.getElementById('letters-with-movies-count');
+        this.letterFilterInfo = document.getElementById('letter-filter-info');
+        this.activeLetterDisplay = document.getElementById('active-letter-display');
+        this.clearLetterFilter = document.getElementById('clear-letter-filter');
 
         // Initialize Bootstrap modal
         const modalElement = document.getElementById('movieSelectionModal');
@@ -108,24 +130,36 @@ class MovieDiscovery {
             });
         }
 
+        // Clear letter filter button
+        if (this.clearLetterFilter) {
+            this.clearLetterFilter.addEventListener('click', () => {
+                this.clearLetterFilterAction();
+            });
+        }
+
         // Handle browser back/forward navigation
         window.addEventListener('popstate', () => {
-            this.initializeSearchFromURL();
+            this.initializeFromURL();
             this.loadMovies();
         });
     }
 
     /**
-     * Initialize search from URL parameters
+     * Initialize search and letter filter from URL parameters
      */
-    initializeSearchFromURL() {
+    initializeFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
         const searchQuery = urlParams.get('search') || '';
+        const letterFilter = urlParams.get('letter') || '';
+        
         this.searchQuery = searchQuery;
+        this.letterFilter = letterFilter;
         
         if (this.searchInput) {
             this.searchInput.value = searchQuery;
         }
+        
+        this.updateLetterFilterDisplay();
     }
 
     /**
@@ -151,7 +185,7 @@ class MovieDiscovery {
         this.searchQuery = trimmedQuery;
 
         // Update URL parameters
-        this.updateURLParams(trimmedQuery);
+        this.updateURLParams(trimmedQuery, this.letterFilter);
 
         // Load movies with search query
         this.loadMovies();
@@ -165,19 +199,26 @@ class MovieDiscovery {
         if (this.searchInput) {
             this.searchInput.value = '';
         }
-        this.updateURLParams('');
+        this.updateURLParams('', this.letterFilter);
         this.loadMovies();
     }
 
     /**
-     * Update URL parameters for search
+     * Update URL parameters for search and letter filter
      */
-    updateURLParams(searchQuery) {
+    updateURLParams(searchQuery, letterFilter) {
         const url = new URL(window.location);
+        
         if (searchQuery) {
             url.searchParams.set('search', searchQuery);
         } else {
             url.searchParams.delete('search');
+        }
+        
+        if (letterFilter && letterFilter !== 'all') {
+            url.searchParams.set('letter', letterFilter);
+        } else {
+            url.searchParams.delete('letter');
         }
         
         // Update URL without reloading page
@@ -192,10 +233,19 @@ class MovieDiscovery {
         this.hideError();
 
         try {
-            // Build API URL with search parameter if needed
+            // Build API URL with search and letter parameters if needed
             let apiUrl = '/api/movies';
+            const params = new URLSearchParams();
+            
             if (this.searchQuery) {
-                const params = new URLSearchParams({ search: this.searchQuery });
+                params.set('search', this.searchQuery);
+            }
+            
+            if (this.letterFilter && this.letterFilter !== 'all') {
+                params.set('letter', this.letterFilter);
+            }
+            
+            if (params.toString()) {
                 apiUrl += '?' + params.toString();
             }
 
@@ -501,6 +551,186 @@ class MovieDiscovery {
     hideNoSearchResults() {
         if (this.noSearchResults) {
             this.noSearchResults.classList.add('d-none');
+        }
+    }
+
+    /**
+     * Initialize letter navigation
+     */
+    initializeLetterNavigation() {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        
+        // Create letter buttons for desktop navigation
+        if (this.letterNavigation) {
+            this.letterNavigation.innerHTML = letters.map(letter => 
+                `<div class="col-3">
+                    <button type="button" 
+                            class="btn btn-outline-secondary btn-sm w-100 letter-btn" 
+                            data-letter="${letter}"
+                            title="Movies starting with ${letter}">
+                        ${letter}
+                    </button>
+                </div>`
+            ).join('');
+        }
+        
+        // Create letter buttons for mobile navigation
+        if (this.mobileLetterNavigation) {
+            this.mobileLetterNavigation.innerHTML = letters.map(letter => 
+                `<div class="col-3">
+                    <button type="button" 
+                            class="btn btn-outline-secondary btn-sm w-100 letter-btn" 
+                            data-letter="${letter}"
+                            title="Movies starting with ${letter}">
+                        ${letter}
+                    </button>
+                </div>`
+            ).join('');
+        }
+        
+        // Setup event listeners for letter buttons
+        this.setupLetterButtonListeners();
+    }
+
+    /**
+     * Setup event listeners for letter navigation buttons
+     */
+    setupLetterButtonListeners() {
+        const letterButtons = document.querySelectorAll('.letter-btn');
+        letterButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const letter = e.target.getAttribute('data-letter');
+                this.selectLetter(letter);
+            });
+        });
+    }
+
+    /**
+     * Select a letter filter
+     */
+    selectLetter(letter) {
+        this.letterFilter = letter;
+        this.updateURLParams(this.searchQuery, letter);
+        this.updateLetterButtonStates(letter);
+        this.updateLetterFilterDisplay();
+        this.loadMovies();
+        
+        // Close mobile navigation if open
+        const mobileNav = document.getElementById('mobile-letter-nav');
+        if (mobileNav && mobileNav.classList.contains('show')) {
+            const collapseInstance = new bootstrap.Collapse(mobileNav);
+            collapseInstance.hide();
+        }
+    }
+
+    /**
+     * Clear letter filter
+     */
+    clearLetterFilterAction() {
+        this.letterFilter = '';
+        this.updateURLParams(this.searchQuery, '');
+        this.updateLetterButtonStates('');
+        this.updateLetterFilterDisplay();
+        this.loadMovies();
+    }
+
+    /**
+     * Update letter button states (active/disabled)
+     */
+    updateLetterButtonStates(activeLetter) {
+        const letterButtons = document.querySelectorAll('.letter-btn');
+        letterButtons.forEach(button => {
+            const buttonLetter = button.getAttribute('data-letter');
+            const count = this.letterCounts[buttonLetter] || 0;
+            
+            // Remove all state classes first
+            button.classList.remove('active', 'btn-primary', 'btn-outline-primary', 'btn-secondary', 'btn-outline-secondary');
+            button.disabled = false;
+            
+            if (buttonLetter === activeLetter) {
+                // Active state
+                if (buttonLetter === 'all') {
+                    button.classList.add('btn-primary');
+                } else {
+                    button.classList.add('btn-primary');
+                }
+            } else if (buttonLetter === 'all') {
+                // All button - always enabled
+                button.classList.add('btn-outline-primary');
+            } else if (count === 0) {
+                // Disabled state for letters with no movies
+                button.classList.add('btn-outline-secondary');
+                button.disabled = true;
+                button.style.opacity = '0.4';
+            } else {
+                // Normal state
+                button.classList.add('btn-outline-secondary');
+                button.style.opacity = '';
+            }
+            
+            // Update button text with count (except for 'all' button)
+            if (buttonLetter !== 'all' && buttonLetter !== '#') {
+                button.innerHTML = count > 0 ? `${buttonLetter} <small>(${count})</small>` : buttonLetter;
+            } else if (buttonLetter === '#') {
+                const numCount = this.letterCounts['#'] || 0;
+                button.innerHTML = numCount > 0 ? `# <small>(${numCount})</small>` : '# (0-9)';
+            }
+        });
+    }
+
+    /**
+     * Update letter filter display badge
+     */
+    updateLetterFilterDisplay() {
+        if (!this.letterFilterInfo || !this.activeLetterDisplay) return;
+        
+        if (this.letterFilter && this.letterFilter !== 'all') {
+            this.letterFilterInfo.classList.remove('d-none');
+            this.activeLetterDisplay.textContent = this.letterFilter === '#' ? '# (Numbers)' : this.letterFilter;
+        } else {
+            this.letterFilterInfo.classList.add('d-none');
+        }
+    }
+
+    /**
+     * Load letter counts from API
+     */
+    async loadLetterCounts() {
+        try {
+            // Build API URL with search parameter if needed for counts
+            let apiUrl = '/api/movies/letters';
+            if (this.searchQuery) {
+                const params = new URLSearchParams({ search: this.searchQuery });
+                apiUrl += '?' + params.toString();
+            }
+
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            this.letterCounts = data.letter_counts || {};
+            
+            // Update letter button states
+            this.updateLetterButtonStates(this.letterFilter);
+            
+            // Update letter counts info
+            if (this.letterCountsInfo && this.lettersWithMoviesCount) {
+                this.letterCountsInfo.classList.remove('d-none');
+                this.lettersWithMoviesCount.textContent = data.total_letters_with_movies || 0;
+            }
+
+        } catch (error) {
+            console.error('Error loading letter counts:', error);
+            // Don't show error for letter counts - it's supplementary data
         }
     }
 

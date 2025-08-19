@@ -199,3 +199,149 @@ class TestContentService:
                 movies = ContentService.get_available_movies(1, 2, search_query=query)
                 assert isinstance(movies, list)
                 # Results should only match literal text, not wildcard patterns
+
+    def test_get_available_movies_with_letter_filter(self, app):
+        """Test getting movies with letter filtering."""
+        with app.app_context():
+            # Test filtering by letter 'M' (should include "The Matrix")
+            movies = ContentService.get_available_movies(1, 2, letter_filter="M")
+            
+            assert isinstance(movies, list)
+            # All returned movies should start with 'M'
+            for movie in movies:
+                assert movie['title'][0].upper() == 'M'
+                assert 'id' in movie
+                assert 'title' in movie
+                assert 'subtitle_links_count' in movie
+                assert 'has_subtitles' in movie
+
+    def test_get_available_movies_with_letter_filter_all(self, app):
+        """Test letter filter with 'all' option."""
+        with app.app_context():
+            # Get all movies without filter
+            all_movies = ContentService.get_available_movies(1, 2)
+            
+            # Get movies with 'all' filter
+            all_filter_movies = ContentService.get_available_movies(1, 2, letter_filter="all")
+            
+            # Should return the same results
+            assert len(all_movies) == len(all_filter_movies)
+            
+            # Convert to sets for comparison
+            all_ids = {movie['id'] for movie in all_movies}
+            all_filter_ids = {movie['id'] for movie in all_filter_movies}
+            assert all_ids == all_filter_ids
+
+    def test_get_available_movies_with_letter_filter_numbers(self, app):
+        """Test letter filter with '#' for movies starting with numbers."""
+        with app.app_context():
+            # Test filtering by '#' for movies starting with numbers
+            movies = ContentService.get_available_movies(1, 2, letter_filter="#")
+            
+            assert isinstance(movies, list)
+            # All returned movies should start with a number
+            for movie in movies:
+                assert movie['title'][0].isdigit()
+
+    def test_get_available_movies_with_letter_filter_case_insensitive(self, app):
+        """Test that letter filtering is case-insensitive."""
+        with app.app_context():
+            # Test with both lowercase and uppercase
+            movies_lower = ContentService.get_available_movies(1, 2, letter_filter="m")
+            movies_upper = ContentService.get_available_movies(1, 2, letter_filter="M")
+            
+            # Should return the same results
+            assert len(movies_lower) == len(movies_upper)
+            
+            # Convert to sets for comparison
+            ids_lower = {movie['id'] for movie in movies_lower}
+            ids_upper = {movie['id'] for movie in movies_upper}
+            assert ids_lower == ids_upper
+
+    def test_get_available_movies_with_search_and_letter_filter(self, app):
+        """Test combining search query with letter filtering."""
+        with app.app_context():
+            # Test searching for "Matrix" and filtering by "M"
+            movies = ContentService.get_available_movies(1, 2, search_query="Matrix", letter_filter="M")
+            
+            assert isinstance(movies, list)
+            # All returned movies should contain "Matrix" AND start with "M"
+            for movie in movies:
+                assert 'matrix' in movie['title'].lower()
+                assert movie['title'][0].upper() == 'M'
+
+    def test_get_available_movies_invalid_letter_filter(self, app):
+        """Test error handling for invalid letter filter."""
+        with app.app_context():
+            # Test with invalid letter filter values
+            invalid_filters = ['XY', '1', '@', '', 'ALL', 'abc']
+            
+            for invalid_filter in invalid_filters:
+                with pytest.raises(ValueError, match="Letter filter must be A-Z, #, or 'all'"):
+                    ContentService.get_available_movies(1, 2, letter_filter=invalid_filter)
+
+    def test_get_letter_counts(self, app):
+        """Test getting letter counts for available movies."""
+        with app.app_context():
+            # Get letter counts for English to Spanish
+            letter_counts = ContentService.get_letter_counts(1, 2)
+            
+            assert isinstance(letter_counts, dict)
+            
+            # Check that all letters A-Z and # are represented (some might be 0)
+            expected_letters = set('ABCDEFGHIJKLMNOPQRSTUVWXYZ#')
+            # At least some letters should have counts > 0
+            assert len(letter_counts) > 0
+            
+            # All values should be non-negative integers
+            for letter, count in letter_counts.items():
+                assert letter in expected_letters
+                assert isinstance(count, int)
+                assert count >= 0
+
+    def test_get_letter_counts_with_search_query(self, app):
+        """Test getting letter counts with search query filtering."""
+        with app.app_context():
+            # Get letter counts with search query
+            letter_counts = ContentService.get_letter_counts(1, 2, search_query="Matrix")
+            
+            assert isinstance(letter_counts, dict)
+            
+            # Should only have counts for letters that start movies matching "Matrix"
+            total_matches = sum(letter_counts.values())
+            
+            # Get actual movies with same search to verify consistency
+            movies = ContentService.get_available_movies(1, 2, search_query="Matrix")
+            assert total_matches == len(movies)
+
+    def test_get_letter_counts_invalid_language_ids(self, app):
+        """Test error handling for invalid language IDs in letter counts."""
+        with app.app_context():
+            # Test with None values
+            with pytest.raises(ValueError, match="Both native_language_id and target_language_id are required"):
+                ContentService.get_letter_counts(None, 2)
+                
+            with pytest.raises(ValueError, match="Both native_language_id and target_language_id are required"):
+                ContentService.get_letter_counts(1, None)
+
+    def test_get_letter_counts_same_language(self, app):
+        """Test error handling when native and target languages are the same for letter counts."""
+        with app.app_context():
+            with pytest.raises(ValueError, match="Native and target languages must be different"):
+                ContentService.get_letter_counts(1, 1)
+
+    def test_is_valid_letter_filter(self, app):
+        """Test letter filter validation method."""
+        with app.app_context():
+            # Valid letters
+            for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                assert ContentService._is_valid_letter_filter(letter) is True
+                assert ContentService._is_valid_letter_filter(letter.lower()) is True
+            
+            # Valid special case
+            assert ContentService._is_valid_letter_filter('#') is True
+            
+            # Invalid cases
+            invalid_filters = ['', 'XY', '1', '@', 'ALL', 'abc', None, '##', 'A1']
+            for invalid_filter in invalid_filters:
+                assert ContentService._is_valid_letter_filter(invalid_filter) is False

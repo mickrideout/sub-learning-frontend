@@ -3,9 +3,93 @@
 {% block title %}Movie Catalog - Subtitle Learning{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="row">
-        <div class="col-md-8 mx-auto">
+        <!-- Alphabetical Navigation Sidebar -->
+        <div class="col-lg-2 col-md-3 d-none d-md-block">
+            <div class="sticky-top" style="top: 20px;">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-sort-alpha-down me-2"></i>
+                            Browse by Letter
+                        </h6>
+                    </div>
+                    <div class="card-body p-2">
+                        <!-- All option -->
+                        <button type="button" 
+                                class="btn btn-outline-primary btn-sm w-100 mb-2 letter-btn" 
+                                data-letter="all">
+                            All Movies
+                        </button>
+                        
+                        <!-- Letter navigation grid -->
+                        <div class="row g-1" id="letter-navigation">
+                            <!-- A-Z letters will be populated here by JavaScript -->
+                        </div>
+                        
+                        <!-- Number option -->
+                        <button type="button" 
+                                class="btn btn-outline-secondary btn-sm w-100 mt-2 letter-btn" 
+                                data-letter="#"
+                                title="Movies starting with numbers">
+                            # (0-9)
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Letter counts info -->
+                <div id="letter-counts-info" class="mt-3 d-none">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <span id="letters-with-movies-count">0</span> letters have movies
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile letter navigation (collapsible) -->
+        <div class="col-12 d-md-none mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <button class="btn btn-link text-decoration-none p-0 w-100 text-start" 
+                            type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#mobile-letter-nav" 
+                            aria-expanded="false">
+                        <i class="fas fa-sort-alpha-down me-2"></i>
+                        Browse by Letter
+                        <i class="fas fa-chevron-down float-end"></i>
+                    </button>
+                </div>
+                <div class="collapse" id="mobile-letter-nav">
+                    <div class="card-body p-2">
+                        <!-- All option -->
+                        <button type="button" 
+                                class="btn btn-outline-primary btn-sm w-100 mb-2 letter-btn" 
+                                data-letter="all">
+                            All Movies
+                        </button>
+                        
+                        <!-- Letter navigation grid for mobile -->
+                        <div class="row g-1" id="mobile-letter-navigation">
+                            <!-- A-Z letters will be populated here by JavaScript -->
+                        </div>
+                        
+                        <!-- Number option -->
+                        <button type="button" 
+                                class="btn btn-outline-secondary btn-sm w-100 mt-2 letter-btn" 
+                                data-letter="#"
+                                title="Movies starting with numbers">
+                            # (0-9)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main content area -->
+        <div class="col-lg-10 col-md-9 col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h2">Movie Catalog</h1>
                 <a href="{{ url_for('auth.dashboard') }}" class="btn btn-secondary">
@@ -33,7 +117,7 @@
             <!-- Search bar -->
             <div id="search-container" class="mb-4 d-none">
                 <div class="row">
-                    <div class="col-md-8 mx-auto">
+                    <div class="col-lg-8 mx-auto">
                         <div class="input-group">
                             <span class="input-group-text">
                                 <i class="fas fa-search"></i>
@@ -52,6 +136,15 @@
                         </div>
                         <div id="search-results-info" class="mt-2 text-muted small d-none">
                             <span id="search-result-count"></span>
+                        </div>
+                        <div id="letter-filter-info" class="mt-1 d-none">
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-filter me-1"></i>
+                                Letter: <span id="active-letter-display"></span>
+                                <button type="button" class="btn-close btn-close-white btn-sm ms-1" 
+                                        id="clear-letter-filter" 
+                                        title="Clear letter filter"></button>
+                            </span>
                         </div>
                     </div>
                 </div>
