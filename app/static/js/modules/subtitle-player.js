@@ -116,6 +116,11 @@ class SubtitlePlayer {
      */
     async loadAlignmentData(startIndex = 0) {
         try {
+            // Validate parameters
+            if (startIndex < 0) {
+                throw new Error('Start index cannot be negative');
+            }
+            
             const url = `/api/subtitles/${this.subLinkId}?start_index=${startIndex}&limit=${this.batchSize}`;
             const response = await fetch(url, {
                 method: 'GET',
@@ -126,13 +131,19 @@ class SubtitlePlayer {
             });
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
             
             const data = await response.json();
             
+            // Validate response structure
+            if (!data || typeof data !== 'object') {
+                throw new Error('Invalid response format');
+            }
+            
             // Store alignment data and subtitle lines
-            this.alignmentData = data.alignments || [];
+            this.alignmentData = Array.isArray(data.alignments) ? data.alignments : [];
             this.subtitleLines = data.subtitle_lines || {};
             this.totalAlignments = data.pagination?.total_alignments || 0;
             

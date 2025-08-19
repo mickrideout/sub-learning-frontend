@@ -123,31 +123,50 @@ class DualSubtitleDisplay {
         container.dataset.alignmentIndex = alignmentIndex;
         
         if (!lineIds || lineIds.length === 0) {
-            const emptyLine = document.createElement('div');
-            emptyLine.className = 'subtitle-line empty-line';
-            emptyLine.dataset.index = alignmentIndex;
-            emptyLine.innerHTML = '<em>No text</em>';
-            container.appendChild(emptyLine);
-            return container;
+            return this.createEmptyLineElement(alignmentIndex);
         }
         
         lineIds.forEach(lineId => {
             const line = allLines.find(l => l.id === lineId);
             if (line) {
-                const lineElement = document.createElement('div');
-                lineElement.className = 'subtitle-line';
-                lineElement.dataset.index = alignmentIndex;
-                lineElement.dataset.lineId = lineId;
-                lineElement.dataset.type = type;
-                
-                // Sanitize and set content
-                lineElement.textContent = line.content || '';
-                
+                const lineElement = this.createLineElement(line, alignmentIndex, lineId, type);
                 container.appendChild(lineElement);
             }
         });
         
         return container;
+    }
+    
+    /**
+     * Create empty line element for missing translations
+     */
+    createEmptyLineElement(alignmentIndex) {
+        const container = document.createElement('div');
+        container.className = 'subtitle-alignment';
+        container.dataset.alignmentIndex = alignmentIndex;
+        
+        const emptyLine = document.createElement('div');
+        emptyLine.className = 'subtitle-line empty-line';
+        emptyLine.dataset.index = alignmentIndex;
+        emptyLine.innerHTML = '<em>No text</em>';
+        container.appendChild(emptyLine);
+        return container;
+    }
+    
+    /**
+     * Create individual subtitle line element
+     */
+    createLineElement(line, alignmentIndex, lineId, type) {
+        const lineElement = document.createElement('div');
+        lineElement.className = 'subtitle-line';
+        lineElement.dataset.index = alignmentIndex;
+        lineElement.dataset.lineId = lineId;
+        lineElement.dataset.type = type;
+        
+        // Sanitize and set content - using textContent for XSS protection
+        lineElement.textContent = line.content || '';
+        
+        return lineElement;
     }
     
     /**
@@ -204,22 +223,26 @@ class DualSubtitleDisplay {
      * Set font size and apply to display
      */
     setFontSize(fontSizeId) {
+        const validFontSizes = ['font-small', 'font-medium', 'font-large', 'font-xlarge'];
+        
+        // Validate font size selection
+        if (!validFontSizes.includes(fontSizeId)) {
+            console.warn('Invalid font size selected:', fontSizeId);
+            return;
+        }
+        
         // Remove previous font size classes
-        const fontClasses = ['font-small', 'font-medium', 'font-large', 'font-xlarge'];
-        document.body.classList.remove(...fontClasses);
+        document.body.classList.remove(...validFontSizes);
         
         // Add new font size class
-        const fontSize = fontSizeId;
-        document.body.classList.add(fontSize);
-        this.fontSize = fontSize;
+        document.body.classList.add(fontSizeId);
+        this.fontSize = fontSizeId;
         
         // Update button states
-        const fontButtons = document.querySelectorAll('[id^="font-"]');
-        fontButtons.forEach(btn => btn.classList.remove('active'));
-        document.getElementById(fontSizeId).classList.add('active');
+        this.updateButtonStates('font-', fontSizeId);
         
         // Save preference
-        this.savePreference('fontSize', fontSize);
+        this.savePreference('fontSize', fontSizeId);
     }
     
     /**
@@ -227,6 +250,18 @@ class DualSubtitleDisplay {
      */
     setColumnLayout(layoutId) {
         const subtitleRow = document.getElementById('subtitle-row');
+        const validLayouts = ['width-left', 'width-right', 'width-equal'];
+        
+        // Validate layout selection
+        if (!validLayouts.includes(layoutId)) {
+            console.warn('Invalid column layout selected:', layoutId);
+            return;
+        }
+        
+        if (!subtitleRow) {
+            console.error('Subtitle row element not found');
+            return;
+        }
         
         // Remove previous layout classes
         subtitleRow.classList.remove('width-left-favor', 'width-right-favor');
@@ -248,9 +283,7 @@ class DualSubtitleDisplay {
         }
         
         // Update button states
-        const widthButtons = document.querySelectorAll('[id^="width-"]');
-        widthButtons.forEach(btn => btn.classList.remove('active'));
-        document.getElementById(layoutId).classList.add('active');
+        this.updateButtonStates('width-', layoutId);
         
         // Save preference
         this.savePreference('columnLayout', this.columnLayout);
@@ -273,11 +306,22 @@ class DualSubtitleDisplay {
     }
     
     /**
-     * Save user preference to localStorage
+     * Save user preference to localStorage with validation
      */
     savePreference(key, value) {
         try {
-            localStorage.setItem(`learning_${key}`, value);
+            // Validate key and value
+            if (!key || typeof key !== 'string') {
+                console.warn('Invalid preference key:', key);
+                return;
+            }
+            
+            if (value === null || value === undefined) {
+                console.warn('Invalid preference value for key:', key);
+                return;
+            }
+            
+            localStorage.setItem(`learning_${key}`, String(value));
         } catch (error) {
             console.warn('Failed to save preference:', error);
         }
@@ -399,5 +443,20 @@ class DualSubtitleDisplay {
             return this.alignmentData[this.currentIndex];
         }
         return null;
+    }
+    
+    /**
+     * Update button states for control groups
+     */
+    updateButtonStates(prefix, activeId) {
+        const buttons = document.querySelectorAll(`[id^="${prefix}"]`);
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        const activeButton = document.getElementById(activeId);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        } else {
+            console.warn(`Button with id ${activeId} not found`);
+        }
     }
 }
