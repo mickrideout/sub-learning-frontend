@@ -19,7 +19,8 @@
       "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python -m flask db current)",
       "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python -m flask db upgrade)",
       "Bash(PYTHONPATH=/home/mick/src/sub-learning-frontend python:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(export FLASK_APP=wsgi.py)"
     ],
     "deny": [],
     "ask": []

@@ -154,3 +154,10 @@ def learning(sub_link_id):
     return render_template('main/learning.html', 
                          sub_link=sub_link,
                          sub_link_id=sub_link_id)
+
+
+@main_bp.route('/bookmarks', methods=['GET'])
+@login_required
+def bookmarks():
+    """Bookmark management page for organizing saved subtitle alignments."""
+    return render_template('main/bookmarks.html')

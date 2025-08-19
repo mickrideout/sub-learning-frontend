@@ -66,7 +66,7 @@ def create_app(test_config=None):
     login_manager.login_message_category = 'info'
 
     # Import models for migration detection
-    from app.models import User, Language  # noqa: F401
+    from app.models import User, Language, SubTitle, SubLink, Bookmark  # noqa: F401
 
     # User loader callback for Flask-Login
     @login_manager.user_loader

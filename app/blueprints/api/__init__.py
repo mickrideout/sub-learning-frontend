@@ -8,3 +8,4 @@ from app.blueprints.api import routes  # noqa: F401
 from app.blueprints.api import movies  # noqa: F401
 from app.blueprints.api import subtitles  # noqa: F401
 from app.blueprints.api import progress  # noqa: F401
+from app.blueprints.api import bookmarks  # noqa: F401

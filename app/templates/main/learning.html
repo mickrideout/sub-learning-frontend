@@ -98,10 +98,15 @@
                     </button>
                 </div>
                 
-                <!-- Keyboard Shortcuts Help -->
-                <button type="button" class="btn btn-outline-info btn-sm mb-2" id="btn-shortcuts" title="Keyboard Shortcuts">
-                    <i class="fas fa-keyboard"></i>
-                </button>
+                <!-- Bookmarks and Help Controls -->
+                <div class="btn-group me-3 mb-2" role="group" aria-label="Additional controls">
+                    <a href="{{ url_for('main.bookmarks') }}" class="btn btn-outline-warning btn-sm" title="View Bookmarks">
+                        <i class="fas fa-bookmark"></i> Bookmarks
+                    </a>
+                    <button type="button" class="btn btn-outline-info btn-sm" id="btn-shortcuts" title="Keyboard Shortcuts">
+                        <i class="fas fa-keyboard"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -171,6 +176,7 @@
 <script src="{{ url_for('static', filename='js/utils/storage-helper.js') }}"></script>
 <script src="{{ url_for('static', filename='js/components/dual-subtitle-display.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modules/subtitle-player.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modules/bookmark-manager.js') }}"></script>
 <script>
     // Initialize learning interface when page loads
     document.addEventListener('DOMContentLoaded', function() {
@@ -178,6 +184,9 @@
         
         // Initialize subtitle player
         const subtitlePlayer = new SubtitlePlayer(learningData.subLinkId, 0);
+        
+        // Initialize bookmark manager
+        const bookmarkManager = new BookmarkManager(learningData.subLinkId);
         
         // Set up additional UI event listeners
         const btnFirst = document.getElementById('btn-first');
@@ -261,6 +270,14 @@
                             subtitlePlayer.pauseAutoPlay();
                         }
                         break;
+                    case 'b':
+                        event.preventDefault();
+                        // Create bookmark for current alignment
+                        if (subtitlePlayer.getCurrentIndex) {
+                            const currentIndex = subtitlePlayer.getCurrentIndex();
+                            bookmarkManager.showBookmarkModal(currentIndex);
+                        }
+                        break;
                     case '?':
                         event.preventDefault();
                         showKeyboardShortcuts();
@@ -300,6 +317,7 @@
                                             <li><kbd>2</kbd> Normal speed (3s)</li>
                                             <li><kbd>3</kbd> Fast speed (1s)</li>
                                             <li><kbd>Esc</kbd> Pause playback</li>
+                                            <li><kbd>b</kbd> Bookmark current</li>
                                         </ul>
                                     </div>
                                 </div>
