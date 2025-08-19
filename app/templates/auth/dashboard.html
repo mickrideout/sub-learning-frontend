@@ -108,7 +108,19 @@
     <div class="col-12">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Learning Analytics</h5>
+                <h5 class="card-title d-flex justify-content-between align-items-center">
+                    Learning Analytics
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm me-2" id="toggle-goals">
+                            <i class="fas fa-target"></i> Goals
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" id="refresh-analytics">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </h5>
+                
+                <!-- Enhanced Analytics Stats -->
                 <div id="learning-analytics">
                     <div class="row">
                         <div class="col-md-3 text-center mb-3">
@@ -128,7 +140,137 @@
                             <small class="text-muted">Completion Rate</small>
                         </div>
                     </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <h4 class="text-secondary mb-1" id="learning-velocity">0.0</h4>
+                            <small class="text-muted">Alignments/Hour</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <h4 class="text-dark mb-1" id="active-sessions">0</h4>
+                            <small class="text-muted">Active Sessions</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <h4 class="text-primary mb-1" id="movies-completed">0</h4>
+                            <small class="text-muted">Movies Completed</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <h4 class="text-success mb-1" id="total-study-time">0</h4>
+                            <small class="text-muted">Total Hours</small>
+                        </div>
+                    </div>
                 </div>
+                
+                <!-- Progress Charts Section -->
+                <div class="mt-4">
+                    <h6 class="mb-3">Learning Progress Charts</h6>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="btn-group btn-group-sm" role="group" id="chart-period-toggle">
+                                    <input type="radio" class="btn-check" name="chart-period" id="period-weekly" value="weekly" checked>
+                                    <label class="btn btn-outline-primary" for="period-weekly">Weekly</label>
+                                    
+                                    <input type="radio" class="btn-check" name="chart-period" id="period-monthly" value="monthly">
+                                    <label class="btn btn-outline-primary" for="period-monthly">Monthly</label>
+                                </div>
+                                <small class="text-muted">Last 30 days</small>
+                            </div>
+                            <div style="height: 300px; position: relative;">
+                                <canvas id="progress-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Learning Goals Section -->
+<div class="row" id="goals-section" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title mb-0">Learning Goals</h5>
+                    <button class="btn btn-primary btn-sm" id="create-goal-btn">
+                        <i class="fas fa-plus"></i> Create Goal
+                    </button>
+                </div>
+                
+                <div id="goals-container">
+                    <div class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status" id="goals-loader">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Loading goals...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Session History Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title d-flex justify-content-between align-items-center">
+                    Session History
+                    <button class="btn btn-outline-secondary btn-sm" id="refresh-history">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </h5>
+                
+                <div id="session-history-container">
+                    <div class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status" id="history-loader">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Loading session history...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Goal Creation Modal -->
+<div class="modal fade" id="goalModal" tabindex="-1" aria-labelledby="goalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="goalModalLabel">Create Learning Goal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="goal-form">
+                    <div class="mb-3">
+                        <label for="goal-type" class="form-label">Goal Type</label>
+                        <select class="form-select" id="goal-type" required>
+                            <option value="">Select goal type...</option>
+                            <option value="daily_minutes">Daily Minutes</option>
+                            <option value="weekly_alignments">Weekly Alignments</option>
+                            <option value="movie_completion">Movie Completion</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="target-value" class="form-label">Target Value</label>
+                        <input type="number" class="form-control" id="target-value" min="1" required>
+                        <div class="form-text" id="target-help">Enter the target number for your goal.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="deadline" class="form-label">Deadline (Optional)</label>
+                        <input type="date" class="form-control" id="deadline">
+                        <div class="form-text">Set a deadline to track your progress.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-goal">Create Goal</button>
             </div>
         </div>
     </div>
@@ -137,26 +279,35 @@
 
 {% block scripts %}
 <script type="module">
+import { DashboardAnalytics } from '/static/js/modules/dashboard-analytics.js';
+import { SessionAnalytics } from '/static/js/modules/session-analytics.js';
+import { GoalsManager } from '/static/js/modules/goals-manager.js';
 import { StorageHelper } from '/static/js/utils/storage-helper.js';
 
-class DashboardProgress {
+class EnhancedDashboard {
     constructor() {
         this.recentProgressData = [];
-        this.overallStats = {
-            totalMovies: 0,
-            totalMinutes: 0,
-            overallProgress: 0,
-            totalAlignments: 0,
-            completionRate: 0
-        };
+        this.dashboardAnalytics = null;
+        this.sessionAnalytics = null;
+        this.goalsManager = null;
+        this.goalsVisible = false;
         
         this.init();
     }
     
     async init() {
+        console.log('Enhanced Dashboard initializing...');
+        
+        // Initialize all dashboard modules
+        this.dashboardAnalytics = new DashboardAnalytics();
+        this.sessionAnalytics = new SessionAnalytics();
+        this.goalsManager = new GoalsManager();
+        
+        // Load recent progress (legacy functionality)
         await this.loadRecentProgress();
         this.bindEvents();
-        console.log('Dashboard progress initialized');
+        
+        console.log('Enhanced Dashboard initialized');
     }
     
     async loadRecentProgress() {
@@ -173,8 +324,6 @@ class DashboardProgress {
                 const data = await response.json();
                 this.recentProgressData = data.recent_progress || [];
                 this.updateRecentProgressDisplay();
-                this.calculateOverallStats();
-                this.updateOverallStatsDisplay();
             } else if (response.status === 404 || this.recentProgressData.length === 0) {
                 this.showNoProgressMessage();
             } else {
@@ -233,87 +382,6 @@ class DashboardProgress {
         container.innerHTML = html;
     }
     
-    calculateOverallStats() {
-        if (this.recentProgressData.length === 0) {
-            return;
-        }
-        
-        this.overallStats.totalMovies = this.recentProgressData.length;
-        this.overallStats.totalMinutes = this.recentProgressData.reduce(
-            (sum, progress) => sum + (progress.session_duration_minutes || 0), 0
-        );
-        
-        const totalCompletedAlignments = this.recentProgressData.reduce(
-            (sum, progress) => sum + (progress.total_alignments_completed || 0), 0
-        );
-        
-        const totalPossibleAlignments = this.recentProgressData.reduce(
-            (sum, progress) => sum + (progress.total_alignments || 0), 0
-        );
-        
-        this.overallStats.totalAlignments = totalCompletedAlignments;
-        this.overallStats.overallProgress = totalPossibleAlignments > 0 
-            ? (totalCompletedAlignments / totalPossibleAlignments) * 100 
-            : 0;
-        
-        const completedMovies = this.recentProgressData.filter(
-            progress => progress.completion_percentage >= 100
-        ).length;
-        
-        this.overallStats.completionRate = this.overallStats.totalMovies > 0 
-            ? (completedMovies / this.overallStats.totalMovies) * 100 
-            : 0;
-    }
-    
-    updateOverallStatsDisplay() {
-        const elements = {
-            overallProgressBar: document.getElementById('overall-progress-bar'),
-            overallProgressText: document.getElementById('overall-progress-text'),
-            moviesStudied: document.getElementById('movies-studied'),
-            totalMinutes: document.getElementById('total-minutes'),
-            totalAlignmentsCompleted: document.getElementById('total-alignments-completed'),
-            completionRate: document.getElementById('completion-rate'),
-            avgSessionTime: document.getElementById('avg-session-time'),
-            currentStreak: document.getElementById('current-streak')
-        };
-        
-        if (elements.overallProgressBar) {
-            elements.overallProgressBar.style.width = `${this.overallStats.overallProgress}%`;
-        }
-        
-        if (elements.overallProgressText) {
-            elements.overallProgressText.textContent = `${Math.round(this.overallStats.overallProgress)}%`;
-        }
-        
-        if (elements.moviesStudied) {
-            elements.moviesStudied.textContent = this.overallStats.totalMovies;
-        }
-        
-        if (elements.totalMinutes) {
-            elements.totalMinutes.textContent = this.overallStats.totalMinutes;
-        }
-        
-        if (elements.totalAlignmentsCompleted) {
-            elements.totalAlignmentsCompleted.textContent = this.overallStats.totalAlignments.toLocaleString();
-        }
-        
-        if (elements.completionRate) {
-            elements.completionRate.textContent = `${Math.round(this.overallStats.completionRate)}%`;
-        }
-        
-        if (elements.avgSessionTime) {
-            const avgSession = this.overallStats.totalMovies > 0 
-                ? Math.round(this.overallStats.totalMinutes / this.overallStats.totalMovies)
-                : 0;
-            elements.avgSessionTime.textContent = avgSession;
-        }
-        
-        // Placeholder for streak calculation
-        if (elements.currentStreak) {
-            elements.currentStreak.textContent = '1'; // Simplified for now
-        }
-    }
-    
     showNoProgressMessage() {
         const container = document.getElementById('recent-progress-container');
         if (!container) return;
@@ -351,29 +419,81 @@ class DashboardProgress {
     }
     
     bindEvents() {
+        // Refresh recent progress button
         const refreshBtn = document.getElementById('refresh-recent');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', async () => {
                 refreshBtn.disabled = true;
                 const icon = refreshBtn.querySelector('i');
-                if (icon) {
-                    icon.classList.add('fa-spin');
-                }
+                if (icon) icon.classList.add('fa-spin');
                 
                 await this.loadRecentProgress();
                 
                 refreshBtn.disabled = false;
-                if (icon) {
-                    icon.classList.remove('fa-spin');
-                }
+                if (icon) icon.classList.remove('fa-spin');
             });
+        }
+        
+        // Toggle goals section
+        const toggleGoalsBtn = document.getElementById('toggle-goals');
+        if (toggleGoalsBtn) {
+            toggleGoalsBtn.addEventListener('click', () => {
+                this.toggleGoalsSection();
+            });
+        }
+    }
+    
+    toggleGoalsSection() {
+        const goalsSection = document.getElementById('goals-section');
+        const toggleBtn = document.getElementById('toggle-goals');
+        
+        if (goalsSection && toggleBtn) {
+            this.goalsVisible = !this.goalsVisible;
+            goalsSection.style.display = this.goalsVisible ? 'block' : 'none';
+            
+            // Update button text
+            const icon = toggleBtn.querySelector('i');
+            if (icon) {
+                icon.className = this.goalsVisible ? 'fas fa-eye-slash' : 'fas fa-target';
+            }
+            
+            // Update button text
+            toggleBtn.innerHTML = this.goalsVisible 
+                ? '<i class="fas fa-eye-slash"></i> Hide Goals' 
+                : '<i class="fas fa-target"></i> Goals';
+        }
+    }
+    
+    async refreshAll() {
+        // Refresh all dashboard data
+        await this.loadRecentProgress();
+        
+        if (this.dashboardAnalytics) {
+            await this.dashboardAnalytics.refreshAll();
+        }
+        
+        if (this.sessionAnalytics) {
+            await this.sessionAnalytics.refreshHistory();
+        }
+        
+        if (this.goalsManager && this.goalsVisible) {
+            await this.goalsManager.loadGoals();
         }
     }
 }
 
-// Initialize dashboard progress when DOM is loaded
+// Global variables for module access
+let dashboard;
+let goalsManager;
+
+// Initialize enhanced dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new DashboardProgress();
+    dashboard = new EnhancedDashboard();
+    
+    // Make goals manager globally accessible for onclick handlers
+    setTimeout(() => {
+        goalsManager = dashboard.goalsManager;
+    }, 100);
 });
 </script>
 {% endblock %}
