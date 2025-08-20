@@ -25,7 +25,12 @@
       "Bash(FLASK_APP=app python -m flask db revision --autogenerate -m \"Add Bookmark model for subtitle bookmarking functionality\")",
       "Bash(rm:*)",
       "Bash(FLASK_APP=app python -m flask db upgrade)",
-      "Bash(FLASK_APP=app python -m flask db revision --autogenerate -m \"Add learning_goals table for user goal tracking\")"
+      "Bash(FLASK_APP=app python -m flask db revision --autogenerate -m \"Add learning_goals table for user goal tracking\")",
+      "Bash(FLASK_APP=app python -c \"from app import create_app, db; from app.models import Language; app = create_app(); with app.app_context(): print(''Languages in database:''); langs = Language.query.all(); [print(f''  {l.id}: {l.display_name} ({l.code})'') for l in langs]; print(f''Total: {len(langs)} languages'')\")",
+      "Bash(FLASK_APP=app python -c \"\nfrom app import create_app, db\nfrom app.models import Language\napp = create_app()\nwith app.app_context():\n    print(''Languages in database:'')\n    langs = Language.query.all()\n    for l in langs:\n        print(f''  {l.id}: {l.display_name} ({l.code})'')\n    print(f''Total: {len(langs)} languages'')\n\")",
+      "Bash(FLASK_APP=app python -m flask db current)",
+      "Bash(FLASK_APP=app python -c \"\nfrom app import create_app, db\nfrom app.models import Language\napp = create_app()\nwith app.app_context():\n    print(''Languages in database:'')\n    langs = Language.query.limit(5).all()\n    for l in langs:\n        print(f''  {l.id}: {l.display_name} ({l.code})'')\n    total = Language.query.count()\n    print(f''Total: {total} languages'')\n\")",
+      "Bash(FLASK_APP=app flask run --host=0.0.0.0 --port=5000)"
     ],
     "deny": [],
     "ask": []

@@ -106,24 +106,56 @@
                     </div>
                 </div>
                 
-                {% if user.native_language_id or user.target_language_id %}
                 <hr>
                 <div class="row">
                     <div class="col-12">
                         <h5>Language Preferences</h5>
-                        <table class="table table-borderless">
-                            <tr>
-                                <td><strong>Native Language ID:</strong></td>
-                                <td>{{ user.native_language_id or 'Not set' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Target Language ID:</strong></td>
-                                <td>{{ user.target_language_id or 'Not set' }}</td>
-                            </tr>
-                        </table>
+                        <form id="profile-language-form">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="profile-native-language" class="form-label">
+                                            <strong>Native Language:</strong>
+                                        </label>
+                                        <select class="form-select" id="profile-native-language" name="native_language_id">
+                                            <option value="">Select native language...</option>
+                                            <!-- Languages will be populated via JavaScript -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="profile-target-language" class="form-label">
+                                            <strong>Target Language:</strong>
+                                        </label>
+                                        <select class="form-select" id="profile-target-language" name="target_language_id">
+                                            <option value="">Select target language...</option>
+                                            <!-- Languages will be populated via JavaScript -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Error display -->
+                            <div id="profile-language-error" class="alert alert-danger d-none" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span id="profile-error-message"></span>
+                            </div>
+                            
+                            <!-- Success display -->
+                            <div id="profile-language-success" class="alert alert-success d-none" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Language preferences updated successfully!
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary" id="profile-save-languages-btn" disabled>
+                                    <i class="fas fa-save me-2"></i>Update Languages
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-                {% endif %}
                 
                 <hr>
                 <div class="d-flex justify-content-between">
@@ -134,4 +166,209 @@
         </div>
     </div>
 </div>
+
+<script>
+// Profile Language Management
+class ProfileLanguageManager {
+    constructor() {
+        this.languages = [];
+        this.currentUser = {
+            native_language_id: {{ user.native_language_id or 'null' }},
+            target_language_id: {{ user.target_language_id or 'null' }}
+        };
+        
+        this.elements = {
+            form: document.getElementById('profile-language-form'),
+            nativeSelect: document.getElementById('profile-native-language'),
+            targetSelect: document.getElementById('profile-target-language'),
+            saveButton: document.getElementById('profile-save-languages-btn'),
+            errorDiv: document.getElementById('profile-language-error'),
+            errorMessage: document.getElementById('profile-error-message'),
+            successDiv: document.getElementById('profile-language-success')
+        };
+        
+        this.init();
+    }
+    
+    async init() {
+        try {
+            await this.loadLanguages();
+            this.setupEventListeners();
+            this.setCurrentSelections();
+        } catch (error) {
+            console.error('Failed to initialize profile language manager:', error);
+            this.showError('Failed to load languages. Please refresh the page.');
+        }
+    }
+    
+    async loadLanguages() {
+        try {
+            const response = await fetch('/api/languages');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            this.languages = data.languages || [];
+            
+            this.populateLanguageSelects();
+            
+        } catch (error) {
+            console.error('Error loading languages:', error);
+            throw error;
+        }
+    }
+    
+    populateLanguageSelects() {
+        // Clear existing options (except the first placeholder option)
+        this.clearSelectOptions(this.elements.nativeSelect);
+        this.clearSelectOptions(this.elements.targetSelect);
+        
+        // Populate both selects with language options
+        this.languages.forEach(language => {
+            const nativeOption = this.createLanguageOption(language);
+            const targetOption = this.createLanguageOption(language);
+            
+            this.elements.nativeSelect.appendChild(nativeOption);
+            this.elements.targetSelect.appendChild(targetOption);
+        });
+    }
+    
+    clearSelectOptions(selectElement) {
+        // Keep the first option (placeholder), remove all others
+        const options = selectElement.querySelectorAll('option:not(:first-child)');
+        options.forEach(option => option.remove());
+    }
+    
+    createLanguageOption(language) {
+        const option = document.createElement('option');
+        option.value = language.id;
+        option.textContent = language.display_name;
+        return option;
+    }
+    
+    setCurrentSelections() {
+        if (this.currentUser.native_language_id) {
+            this.elements.nativeSelect.value = this.currentUser.native_language_id;
+        }
+        if (this.currentUser.target_language_id) {
+            this.elements.targetSelect.value = this.currentUser.target_language_id;
+        }
+        this.validateSelection();
+    }
+    
+    setupEventListeners() {
+        // Language selection changes
+        this.elements.nativeSelect.addEventListener('change', () => {
+            this.validateSelection();
+        });
+        
+        this.elements.targetSelect.addEventListener('change', () => {
+            this.validateSelection();
+        });
+        
+        // Form submission
+        this.elements.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleFormSubmit();
+        });
+    }
+    
+    validateSelection() {
+        const nativeId = parseInt(this.elements.nativeSelect.value) || null;
+        const targetId = parseInt(this.elements.targetSelect.value) || null;
+        
+        const hasChanges = nativeId !== this.currentUser.native_language_id || 
+                          targetId !== this.currentUser.target_language_id;
+        const bothSelected = nativeId && targetId;
+        const isDifferent = nativeId !== targetId;
+        
+        this.elements.saveButton.disabled = !hasChanges || !bothSelected || !isDifferent;
+        
+        // Clear any previous error messages
+        this.hideError();
+        this.hideSuccess();
+        
+        return hasChanges && bothSelected && isDifferent;
+    }
+    
+    async handleFormSubmit() {
+        if (!this.validateSelection()) {
+            return;
+        }
+        
+        const nativeId = parseInt(this.elements.nativeSelect.value);
+        const targetId = parseInt(this.elements.targetSelect.value);
+        
+        if (nativeId === targetId) {
+            this.showError('Native language and target language must be different.');
+            return;
+        }
+        
+        this.elements.saveButton.disabled = true;
+        this.elements.saveButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+        
+        try {
+            const response = await fetch('/api/user/languages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    native_language_id: nativeId,
+                    target_language_id: targetId
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.currentUser.native_language_id = nativeId;
+                this.currentUser.target_language_id = targetId;
+                this.showSuccess();
+                this.validateSelection(); // Reset button state
+            } else {
+                throw new Error(data.error || 'Failed to update language preferences');
+            }
+            
+        } catch (error) {
+            console.error('Error updating language preferences:', error);
+            this.showError(error.message || 'Failed to update language preferences. Please try again.');
+        } finally {
+            this.elements.saveButton.innerHTML = '<i class="fas fa-save me-2"></i>Update Languages';
+            this.validateSelection();
+        }
+    }
+    
+    showError(message) {
+        this.elements.errorMessage.textContent = message;
+        this.elements.errorDiv.classList.remove('d-none');
+        this.hideSuccess();
+    }
+    
+    hideError() {
+        this.elements.errorDiv.classList.add('d-none');
+    }
+    
+    showSuccess() {
+        this.elements.successDiv.classList.remove('d-none');
+        this.hideError();
+        
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => {
+            this.hideSuccess();
+        }, 3000);
+    }
+    
+    hideSuccess() {
+        this.elements.successDiv.classList.add('d-none');
+    }
+}
+
+// Initialize the profile language manager when the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new ProfileLanguageManager();
+});
+</script>
 {% endblock %}
