@@ -1,20 +1,40 @@
 # Technical Assumptions
 
-## Repository Structure: Monorepo
-Single repository containing Flask backend, static frontend assets, templates, and data files. Structure follows `/app` (Flask application), `/static` (CSS/JS/assets), `/templates` (Jinja2 templates), `/migrations` (database schemas), `/data` (subtitle files) organization for straightforward development and deployment.
+## Repository Structure: Full-Stack Monorepo
+Single repository containing separate Flask backend API and React frontend application. Structure follows modern separation of concerns:
+- `/backend` - Flask REST API server
+- `/frontend` - Next.js React application 
+- `/shared` - Common TypeScript types and utilities
+- `/docs` - Project documentation and specifications
+
+This enables independent development and deployment of frontend and backend components while maintaining shared documentation and types.
 
 ## Service Architecture
-Monolithic Flask application with modular blueprints for authentication, content management, user progress, and subtitle delivery APIs. Single-server deployment initially with migration path to microservices as user base scales beyond SQLite limitations.
+**Backend**: Lightweight Flask REST API server with modular blueprints for authentication, content management, user progress, and subtitle delivery endpoints. Stateless API design enabling flexible frontend deployment.
+
+**Frontend**: React single-page application (SPA) built with Next.js, providing server-side rendering capabilities and optimal performance. Communicates with Flask backend via REST API.
+
+**Deployment**: Decoupled architecture allowing independent scaling - Next.js frontend deployed to Vercel/Netlify, Flask backend on DigitalOcean/Heroku. Migration path to microservices remains viable as user base grows.
 
 ## Testing Requirements
-Unit testing for core business logic (authentication, subtitle processing, progress tracking) using pytest framework. Integration testing for API endpoints and database operations. Manual testing for UI workflows and cross-browser compatibility. Automated testing focused on backend reliability with manual validation for frontend user experience.
+**Backend Testing**: Unit testing for core business logic (authentication, subtitle processing, progress tracking) using pytest framework. Integration testing for REST API endpoints and database operations.
+
+**Frontend Testing**: Component testing using Jest and React Testing Library for UI components. Integration testing for user workflows and API integration. End-to-end testing using Playwright for critical user paths.
+
+**Cross-Browser Compatibility**: Automated testing across modern browsers (Chrome, Firefox, Safari, Edge). Responsive design testing for mobile and tablet viewports.
+
+**API Testing**: Automated REST API testing using pytest for backend endpoints. Frontend API integration testing using Mock Service Worker (MSW) for reliable test environments.
 
 ## Additional Technical Assumptions and Requests
 
 **Frontend Technology Stack:**
-- HTML5/CSS3/JavaScript with Bootstrap 5 for responsive design
-- jQuery for DOM manipulation and AJAX requests
-- Modern ES6+ JavaScript features for cleaner code organization
+- React 18+ with Next.js 14+ for modern component-based architecture
+- TypeScript for type-safe development and enhanced developer experience
+- shadcn/ui component library built on Radix UI primitives for accessibility
+- Tailwind CSS for utility-first styling and consistent design system
+- React Query (TanStack Query) for server state management and caching
+- Zustand for lightweight global state management
+- React Hook Form for performant form handling and validation
 
 **Backend Technology Stack:**
 - Python 3.9+ with Flask framework
@@ -29,9 +49,11 @@ Unit testing for core business logic (authentication, subtitle processing, progr
 - Subtitle files stored as static assets with efficient indexing for search functionality
 
 **Hosting and Infrastructure:**
-- Initial deployment on Heroku or DigitalOcean App Platform for simplicity
-- CDN integration (Cloudflare) for subtitle file delivery optimization
-- HTTPS enforcement and secure session configuration
+- **Frontend**: Vercel deployment optimized for Next.js with global CDN and edge computing
+- **Backend**: DigitalOcean Droplet or Heroku for Flask API server
+- **Static Assets**: CDN integration (Vercel Edge Network + Cloudflare) for subtitle file delivery optimization
+- **SSL/TLS**: Automatic HTTPS enforcement across all services
+- **Environment Separation**: Development, staging, and production environments with proper secrets management
 
 **Security and Compliance:**
 - Input sanitization for all user-generated content

@@ -1,6 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Search, BookOpen, Languages, Play } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
 
 // Mock data for demonstration
 const mockLanguages = [
@@ -9,20 +16,25 @@ const mockLanguages = [
   { id: 3, display_name: "French", code: "fr" },
   { id: 4, display_name: "German", code: "de" },
   { id: 5, display_name: "Italian", code: "it" },
+  { id: 6, display_name: "Portuguese", code: "pt" },
+  { id: 7, display_name: "Chinese", code: "zh" },
+  { id: 8, display_name: "Japanese", code: "ja" },
 ]
 
 const mockMovies = [
-  { sub_link_id: 1, title: "The Shawshank Redemption" },
-  { sub_link_id: 2, title: "The Godfather" },
-  { sub_link_id: 3, title: "Pulp Fiction" },
-  { sub_link_id: 4, title: "The Dark Knight" },
-  { sub_link_id: 5, title: "Forrest Gump" },
-  { sub_link_id: 6, title: "Inception" },
-  { sub_link_id: 7, title: "The Matrix" },
-  { sub_link_id: 8, title: "Goodfellas" },
+  { sub_link_id: 1, title: "The Shawshank Redemption", year: 1994, genre: "Drama" },
+  { sub_link_id: 2, title: "The Godfather", year: 1972, genre: "Crime" },
+  { sub_link_id: 3, title: "Pulp Fiction", year: 1994, genre: "Crime" },
+  { sub_link_id: 4, title: "The Dark Knight", year: 2008, genre: "Action" },
+  { sub_link_id: 5, title: "Forrest Gump", year: 1994, genre: "Drama" },
+  { sub_link_id: 6, title: "Inception", year: 2010, genre: "Sci-Fi" },
+  { sub_link_id: 7, title: "The Matrix", year: 1999, genre: "Sci-Fi" },
+  { sub_link_id: 8, title: "Goodfellas", year: 1990, genre: "Crime" },
+  { sub_link_id: 9, title: "Schindler's List", year: 1993, genre: "Drama" },
+  { sub_link_id: 10, title: "The Lord of the Rings", year: 2001, genre: "Fantasy" },
 ]
 
-export default function Page() {
+export default function LandingPage() {
   const [nativeLanguage, setNativeLanguage] = useState("")
   const [targetLanguage, setTargetLanguage] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
@@ -35,11 +47,15 @@ export default function Page() {
     let filtered = mockMovies
 
     if (searchTerm) {
-      filtered = filtered.filter((movie) => movie.title.toLowerCase().includes(searchTerm.toLowerCase()))
+      filtered = filtered.filter((movie) => 
+        movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     }
 
     if (selectedLetter) {
-      filtered = filtered.filter((movie) => movie.title.charAt(0).toUpperCase() === selectedLetter)
+      filtered = filtered.filter((movie) => 
+        movie.title.charAt(0).toUpperCase() === selectedLetter
+      )
     }
 
     setFilteredMovies(filtered)
@@ -54,159 +70,221 @@ export default function Page() {
     setSelectedLetter("")
   }
 
+  const canShowMovies = nativeLanguage && targetLanguage && nativeLanguage !== targetLanguage
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-blue-600">SubLearning</h1>
+            <div className="flex items-center space-x-2">
+              <BookOpen className="h-8 w-8 text-primary" />
+              <h1 className="text-2xl font-bold text-primary">SubLearning</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <a href="#" className="text-gray-600 hover:text-gray-900">
+              <Button variant="ghost" className="text-muted-foreground">
                 Dashboard
-              </a>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Login</button>
+              </Button>
+              <Button>Login</Button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Language Selector */}
-        <div className="bg-gray-50 rounded-xl p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Choose Your Language Pair</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">I speak (Native Language)</label>
-              <select
-                value={nativeLanguage}
-                onChange={(e) => setNativeLanguage(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select your native language...</option>
-                {mockLanguages.map((lang) => (
-                  <option key={lang.id} value={lang.id}>
-                    {lang.display_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">I want to learn (Target Language)</label>
-              <select
-                value={targetLanguage}
-                onChange={(e) => setTargetLanguage(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select target language...</option>
-                {mockLanguages.map((lang) => (
-                  <option key={lang.id} value={lang.id}>
-                    {lang.display_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {/* Hero Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl mb-6">
+            Learn Languages Through
+            <span className="text-primary"> Movie Subtitles</span>
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            Interactive language learning with authentic movie content. 
+            Practice reading comprehension through dual-language subtitles in a professional, 
+            distraction-free environment.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              <Languages className="h-4 w-4 mr-1" />
+              Multiple Languages
+            </Badge>
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              <Play className="h-4 w-4 mr-1" />
+              Interactive Learning
+            </Badge>
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              <BookOpen className="h-4 w-4 mr-1" />
+              Progress Tracking
+            </Badge>
           </div>
         </div>
+      </section>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        {/* Language Selector */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Languages className="h-5 w-5" />
+              Choose Your Language Pair
+            </CardTitle>
+            <CardDescription>
+              Select your native language and the language you want to learn
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="native-language">I speak (Native Language)</Label>
+                <Select value={nativeLanguage} onValueChange={setNativeLanguage}>
+                  <SelectTrigger id="native-language">
+                    <SelectValue placeholder="Select your native language..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockLanguages.map((lang) => (
+                      <SelectItem key={lang.id} value={lang.id.toString()}>
+                        {lang.display_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="target-language">I want to learn (Target Language)</Label>
+                <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                  <SelectTrigger id="target-language">
+                    <SelectValue placeholder="Select target language..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockLanguages.map((lang) => (
+                      <SelectItem key={lang.id} value={lang.id.toString()}>
+                        {lang.display_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search for movies..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        {canShowMovies && (
+          <>
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search for movies..."
+                    className="pl-10"
                   />
-                </svg>
+                </div>
               </div>
+              <Button variant="outline" onClick={clearFilters}>
+                Clear Filters
+              </Button>
             </div>
-          </div>
-          <button
-            onClick={clearFilters}
-            className="px-6 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50"
-          >
-            Clear Filters
-          </button>
-        </div>
 
-        {/* Alphabetical Filter */}
-        <div className="flex flex-wrap gap-2 mb-6 justify-center">
-          {alphabet.map((letter) => (
-            <button
-              key={letter}
-              onClick={() => handleLetterFilter(letter)}
-              className={`w-10 h-10 border rounded-md flex items-center justify-center font-medium transition-colors ${
-                selectedLetter === letter
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-600 border-gray-300 hover:bg-blue-600 hover:text-white hover:border-blue-600"
-              }`}
-            >
-              {letter}
-            </button>
-          ))}
-        </div>
+            {/* Alphabetical Filter */}
+            <div className="flex flex-wrap gap-2 mb-8 justify-center">
+              {alphabet.map((letter) => (
+                <Button
+                  key={letter}
+                  variant={selectedLetter === letter ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleLetterFilter(letter)}
+                  className="w-10 h-10 p-0"
+                >
+                  {letter}
+                </Button>
+              ))}
+            </div>
 
-        {/* Movies Grid */}
-        {nativeLanguage && targetLanguage && nativeLanguage !== targetLanguage ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredMovies.map((movie) => (
-              <div
-                key={movie.sub_link_id}
-                className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg hover:border-blue-600 transition-all cursor-pointer transform hover:-translate-y-1"
-              >
-                <h3 className="font-semibold text-gray-800 mb-2">{movie.title}</h3>
-                <p className="text-sm text-gray-500">
-                  {mockLanguages.find((l) => l.id.toString() === nativeLanguage)?.display_name} →{" "}
-                  {mockLanguages.find((l) => l.id.toString() === targetLanguage)?.display_name}
-                </p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500">
-              {!nativeLanguage || !targetLanguage
-                ? "Select your language pair to discover movies"
-                : nativeLanguage === targetLanguage
-                  ? "Please select different languages"
-                  : "Loading movies..."}
-            </p>
-          </div>
+            {/* Movies Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredMovies.map((movie) => (
+                <Card 
+                  key={movie.sub_link_id}
+                  className="cursor-pointer transition-all hover:shadow-lg hover:scale-105 group"
+                >
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg leading-tight group-hover:text-primary transition-colors">
+                      {movie.title}
+                    </CardTitle>
+                    <CardDescription>
+                      {movie.year} • {movie.genre}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="secondary" className="text-xs">
+                        {mockLanguages.find((l) => l.id.toString() === nativeLanguage)?.display_name} → {" "}
+                        {mockLanguages.find((l) => l.id.toString() === targetLanguage)?.display_name}
+                      </Badge>
+                      <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Play className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {filteredMovies.length === 0 && (
+              <Card className="p-12 text-center">
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    No movies found matching your search criteria.
+                  </p>
+                  <Button variant="outline" onClick={clearFilters} className="mt-4">
+                    Clear Filters
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
+
+        {/* Language Selection Required */}
+        {!canShowMovies && (
+          <Card className="p-12 text-center">
+            <CardContent>
+              <Languages className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-lg">
+                {!nativeLanguage || !targetLanguage
+                  ? "Select your language pair above to discover movies"
+                  : nativeLanguage === targetLanguage
+                    ? "Please select different languages to continue"
+                    : "Loading movies..."}
+              </p>
+            </CardContent>
+          </Card>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-100 border-t border-gray-200 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <footer className="border-t bg-card/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div>
-              <h3 className="font-semibold text-gray-800">SubLearning</h3>
-              <p className="text-sm text-gray-600">Learn languages through movie subtitles</p>
+            <div className="text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start space-x-2 mb-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-foreground">SubLearning</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Learn languages through movie subtitles
+              </p>
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-600 hover:text-gray-900">
-                About
-              </a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">
-                Help
-              </a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">
-                Contact
-              </a>
+              <Button variant="ghost" size="sm">About</Button>
+              <Button variant="ghost" size="sm">Help</Button>
+              <Button variant="ghost" size="sm">Contact</Button>
             </div>
           </div>
         </div>

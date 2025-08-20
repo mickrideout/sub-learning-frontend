@@ -1,4 +1,6 @@
 docs/archived/
+node_modules/
+.next/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -220,7 +220,7 @@ graph TD
 
 ## Component Library / Design System
 
-**Design System Approach:** Start with Bootstrap 5 as the foundation, customizing key components for language learning contexts. Create a minimal but consistent component library focused on readability, quick interaction, and progress feedback.
+**Design System Approach:** Built on shadcn/ui component library with Tailwind CSS foundation, providing modern, accessible components for language learning contexts. Create a minimal but consistent React component library focused on readability, quick interaction, and progress feedback through TypeScript interfaces and reusable patterns.
 
 ### Core Components
 
@@ -331,7 +331,7 @@ graph TD
 
 ### Spacing & Layout
 
-**Grid System:** Bootstrap 5's 12-column responsive grid with custom container max-widths
+**Grid System:** Tailwind CSS Grid and Flexbox utilities with responsive container classes and custom max-widths
 
 **Spacing Scale:** 
 - Base unit: 0.25rem (4px)

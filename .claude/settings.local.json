@@ -30,7 +30,15 @@
       "Bash(FLASK_APP=app python -c \"\nfrom app import create_app, db\nfrom app.models import Language\napp = create_app()\nwith app.app_context():\n    print(''Languages in database:'')\n    langs = Language.query.all()\n    for l in langs:\n        print(f''  {l.id}: {l.display_name} ({l.code})'')\n    print(f''Total: {len(langs)} languages'')\n\")",
       "Bash(FLASK_APP=app python -m flask db current)",
       "Bash(FLASK_APP=app python -c \"\nfrom app import create_app, db\nfrom app.models import Language\napp = create_app()\nwith app.app_context():\n    print(''Languages in database:'')\n    langs = Language.query.limit(5).all()\n    for l in langs:\n        print(f''  {l.id}: {l.display_name} ({l.code})'')\n    total = Language.query.count()\n    print(f''Total: {total} languages'')\n\")",
-      "Bash(FLASK_APP=app flask run --host=0.0.0.0 --port=5000)"
+      "Bash(FLASK_APP=app flask run --host=0.0.0.0 --port=5000)",
+      "Bash(npm init:*)",
+      "Bash(sudo rm:*)",
+      "Bash(find:*)",
+      "Bash(claude-code config set auto-update true)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run lint)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []
